@@ -9,7 +9,7 @@
  *   dsn: <your grill's DSN>
  */
 
-const VERSION = "0.15.0";
+const VERSION = "0.16.0";
 const INTEGRATION_PLATFORM = "ninja_woodfire";
 console.info(
   `%c WOODFIRE-GRILL-CARD %c ${VERSION} `,
@@ -31,47 +31,205 @@ const fmtTime = (sec) => {
   return `${m}:${String(s).padStart(2, "0")}`;
 };
 
-const STATE_LABELS_DE = {
-  idle: "Bereit",
-  preheat: "Vorheizen",
-  preheating: "Vorheizen",
-  start: "Startet",
-  ignition: "Zündung",
-  // `heat` is the active cook phase (firmware holds setpoint),
-  // not the preheat ramp. Show it as "Grillen" so users don't
-  // confuse it with preheat after skip-preheat.
-  heat: "Grillen",
-  cooking: "Grillen",
-  cook: "Grillen",
-  rest: "Ruhen",
-  resting: "Ruhen",
-  flip: "Wenden",
-  flip_food: "Wenden",
-  insert_food: "Essen einlegen",
-  "insert food": "Essen einlegen",
-  get_food: "Essen entnehmen",
-  "get food": "Essen entnehmen",
-  done: "Fertig",
-  error: "Fehler",
-  "lid open": "Deckel offen",
-  lid_open: "Deckel offen",
-  unknown: "Unbekannt",
-  unavailable: "Nicht verfügbar",
-  "powered OFF": "Aus",
-  powered_off: "Aus",
-  off: "Aus",
+// ---------------------------------------------------------------------------
+// Translations
+//
+// The card follows the language the user has chosen in Home Assistant. Each
+// language is plain data, so adding one means adding a block below — no code
+// changes. Anything a block leaves out falls back to English, which makes
+// partial translations safe to contribute.
+//
+// Keys are the firmware's own state/mode names. Both the spaced and
+// underscored spellings appear in the wild, so both are listed.
+// ---------------------------------------------------------------------------
+
+const TRANSLATIONS = {
+  en: {
+    state: {
+      idle: "Ready",
+      preheat: "Preheating",
+      preheating: "Preheating",
+      start: "Starting",
+      ignition: "Igniting",
+      // `heat` is the active cook phase (firmware holding the setpoint), not
+      // the preheat ramp — label it as cooking so it is not mistaken for
+      // preheat after a skip.
+      heat: "Cooking",
+      cooking: "Cooking",
+      cook: "Cooking",
+      rest: "Resting",
+      resting: "Resting",
+      flip: "Flip food",
+      flip_food: "Flip food",
+      insert_food: "Add food",
+      "insert food": "Add food",
+      get_food: "Remove food",
+      "get food": "Remove food",
+      done: "Done",
+      error: "Error",
+      "lid open": "Lid open",
+      lid_open: "Lid open",
+      unknown: "Unknown",
+      unavailable: "Unavailable",
+      "powered OFF": "Off",
+      powered_off: "Off",
+      off: "Off",
+    },
+    // Sub-phases that drive the yellow advisory banner rather than the
+    // main state label.
+    advisory: {
+      flip: "Time to flip",
+      flip_food: "Time to flip",
+      insert_food: "Add food",
+      "insert food": "Add food",
+      get_food: "Remove food",
+      "get food": "Remove food",
+      halftime: "Halfway",
+    },
+    mode: {
+      grill: "Grill",
+      smoker: "Smoker",
+      bake: "Bake",
+      roast: "Roast",
+      dehydrate: "Dehydrate",
+      reheat: "Reheat",
+      "air crisp": "Air Crisp",
+      air_crisp: "Air Crisp",
+    },
+    header: {
+      cook: "Cook {min} min",
+      endsIn: "ends in {time}",
+      notLoaded: "Integration not loaded",
+      disconnected: "Connection lost \u2014 tap Power on once it is back",
+      off: "Grill is off \u2014 tap Power on to wake it",
+      idleHint: "Put something on the grill when you start",
+    },
+    banner: {
+      notLoaded: "Ninja Woodfire integration not loaded \u2014 check Settings \u2192 Devices & Services.",
+      unreachable: "Grill unreachable \u2014 cloud connection lost.",
+      unreachableShort: "Grill unreachable",
+    },
+    pending: { start: "Starting\u2026", power: "Waking\u2026", stop: "Stopping\u2026", skip: "Skipping\u2026" },
+    button: { power: "Power on", start: "Start", stop: "Stop", skip: "Skip preheat" },
+    temp: { grill: "Grill", air: "Air", smoke: "Smoke", lid: "Lid" },
+    lid: { open: "open", closed: "closed" },
+    probe: { name: "Probe {n}", target: "Probe {n} target" },
+    control: {
+      title: "Cook settings",
+      mode: "Mode",
+      heat: "Heat",
+      temp: "Temp",
+      duration: "Duration (min)",
+      smoke: "Smoke (Woodfire)",
+      skipPreheat: "Skip preheat",
+    },
+    progress: { preheat: "Preheating", preheatPct: "Preheating {pct}%" },
+  },
+
+  de: {
+    state: {
+      idle: "Bereit",
+      preheat: "Vorheizen",
+      preheating: "Vorheizen",
+      start: "Startet",
+      ignition: "Z\u00fcndung",
+      heat: "Grillen",
+      cooking: "Grillen",
+      cook: "Grillen",
+      rest: "Ruhen",
+      resting: "Ruhen",
+      flip: "Wenden",
+      flip_food: "Wenden",
+      insert_food: "Essen einlegen",
+      "insert food": "Essen einlegen",
+      get_food: "Essen entnehmen",
+      "get food": "Essen entnehmen",
+      done: "Fertig",
+      error: "Fehler",
+      "lid open": "Deckel offen",
+      lid_open: "Deckel offen",
+      unknown: "Unbekannt",
+      unavailable: "Nicht verf\u00fcgbar",
+      "powered OFF": "Aus",
+      powered_off: "Aus",
+      off: "Aus",
+    },
+    advisory: {
+      flip: "Bitte wenden",
+      flip_food: "Bitte wenden",
+      insert_food: "Essen einlegen",
+      "insert food": "Essen einlegen",
+      get_food: "Essen entnehmen",
+      "get food": "Essen entnehmen",
+      halftime: "Halbzeit",
+    },
+    mode: {
+      grill: "Grillen",
+      smoker: "Smoker",
+      bake: "Backen",
+      roast: "Braten",
+      dehydrate: "D\u00f6rren",
+      reheat: "Aufw\u00e4rmen",
+      "air crisp": "Air Crisp",
+      air_crisp: "Air Crisp",
+    },
+    header: {
+      cook: "Garzeit {min} min",
+      endsIn: "endet in {time}",
+      notLoaded: "Integration nicht geladen",
+      disconnected: "Verbindung verloren \u2014 auf Power on tippen wenn online",
+      off: "Grill ist aus \u2014 auf Power on tippen zum Aufwecken",
+      idleHint: "Lege etwas auf den Grill, wenn du startest",
+    },
+    banner: {
+      notLoaded: "Ninja-Woodfire-Integration nicht geladen \u2014 Settings \u2192 Devices & Services pr\u00fcfen.",
+      unreachable: "Grill nicht erreichbar \u2014 Cloud-Verbindung verloren.",
+      unreachableShort: "Grill nicht erreichbar",
+    },
+    pending: { start: "Startet\u2026", power: "Aufwecken\u2026", stop: "Stoppt\u2026", skip: "Springt\u2026" },
+    button: { power: "Einschalten", start: "Start", stop: "Stopp", skip: "Vorheizen \u00fcberspringen" },
+    temp: { grill: "Grill", air: "Luft", smoke: "Rauch", lid: "Deckel" },
+    lid: { open: "offen", closed: "zu" },
+    probe: { name: "Sonde {n}", target: "Sonde {n} Ziel" },
+    control: {
+      title: "Kochen einstellen",
+      mode: "Modus",
+      heat: "Hitze",
+      temp: "Temp",
+      duration: "Dauer (min)",
+      smoke: "Rauch (Woodfire)",
+      skipPreheat: "Vorheizen \u00fcberspringen",
+    },
+    progress: { preheat: "Vorheizen", preheatPct: "Vorheizen {pct}%" },
+  },
 };
 
-// Sub-phases that come via cook_state and should drive a yellow
-// banner advisory line, not the main state label.
-const ADVISORY_LABELS_DE = {
-  flip: "Bitte wenden",
-  flip_food: "Bitte wenden",
-  insert_food: "Essen einlegen",
-  "insert food": "Essen einlegen",
-  get_food: "Essen entnehmen",
-  "get food": "Essen entnehmen",
+/** Which translation block to use for a Home Assistant language code. */
+const pickLanguage = (hass) => {
+  const raw = hass?.locale?.language || hass?.language || "en";
+  const lower = String(raw).toLowerCase();
+  if (TRANSLATIONS[lower]) return lower;
+  // "de-DE", "en_GB" and friends fall back to the base language.
+  const base = lower.split(/[-_]/)[0];
+  return TRANSLATIONS[base] ? base : "en";
 };
+
+/** English overlaid with the chosen language, so gaps fall back rather than
+ *  rendering a raw key. One level of nesting is all the table has. */
+const stringsFor = (lang) => {
+  const base = TRANSLATIONS.en;
+  const over = TRANSLATIONS[lang] || {};
+  const out = {};
+  for (const section of Object.keys(base)) {
+    out[section] = { ...base[section], ...(over[section] || {}) };
+  }
+  return out;
+};
+
+/** Fill {placeholders} in a translated string. */
+const fill = (text, values) =>
+  String(text ?? "").replace(/\{(\w+)\}/g, (_, k) =>
+    values[k] === undefined ? `{${k}}` : String(values[k]));
 
 const ICON_FOR_STATE = {
   cooking: "mdi:fire",
@@ -88,16 +246,7 @@ const ICON_FOR_STATE = {
   off: "mdi:power",
 };
 
-const MODE_LABELS_DE = {
-  grill: "Grillen",
-  smoker: "Smoker",
-  bake: "Backen",
-  roast: "Braten",
-  dehydrate: "Dörren",
-  reheat: "Aufwärmen",
-  "air crisp": "Air Crisp",
-  air_crisp: "Air Crisp",
-};
+
 
 const COLOR_FOR_STATE = {
   idle: "var(--disabled-color)",
@@ -133,6 +282,12 @@ class WoodfireGrillCard extends HTMLElement {
     this._tickTimer = null;
     this._lastRender = 0;
     this._built = false;
+    // Language the skeleton was built with. The skeleton is built once, so a
+    // language change in Home Assistant has to force a rebuild or the static
+    // labels would keep the old language until a page reload.
+    this._builtLang = null;
+    this._lang = "en";
+    this._L = stringsFor("en");
     // Cached options/attrs from last build — used to detect when we *do* need
     // to rebuild (e.g. select-options finally arrived, mode-dependent unit
     // changed). Without this the inputs would never refresh ranges/options.
@@ -371,6 +526,14 @@ class WoodfireGrillCard extends HTMLElement {
   _render() {
     if (!this._hass || !this._config) return;
 
+    // Follow the user's Home Assistant language.
+    const lang = pickLanguage(this._hass);
+    if (lang !== this._lang) {
+      this._lang = lang;
+      this._L = stringsFor(lang);
+    }
+    if (this._built && this._builtLang !== lang) this._built = false;
+
     // Skeleton is built ONCE — never rebuilt. All dynamic content
     // (mode options, heat-group vs slider, slider ranges) is patched
     // in-place by `_refreshControlValues`. This guarantees the
@@ -378,6 +541,7 @@ class WoodfireGrillCard extends HTMLElement {
     if (!this._built) {
       this._buildShadow();
       this._built = true;
+      this._builtLang = lang;
     }
     // Re-apply tracked open-state to the manual toggle. We own the
     // state (no native <details>), so re-renders just mirror it back
@@ -455,7 +619,7 @@ class WoodfireGrillCard extends HTMLElement {
     const phaseState = isActive && cookState && cookState !== "none"
       ? cookState
       : grillState;
-    const stateLabel = STATE_LABELS_DE[phaseState] || phaseState;
+    const stateLabel = this._L.state[phaseState] || phaseState;
     const stateColor = COLOR_FOR_STATE[phaseState]
       || COLOR_FOR_STATE[grillState]
       || "var(--primary-color)";
@@ -473,7 +637,7 @@ class WoodfireGrillCard extends HTMLElement {
                       || PREHEAT_LIKE.has(cookState);
 
     let sub = "";
-    const cookModeLabel = MODE_LABELS_DE[cookMode] || cookMode;
+    const cookModeLabel = this._L.mode[cookMode] || cookMode;
     if (isActive && cookMode) sub += escapeHtml(cookModeLabel);
     if (isActive && setpointDisplay != null) {
       sub += sub ? " · " : "";
@@ -497,30 +661,30 @@ class WoodfireGrillCard extends HTMLElement {
       const totalMin = Math.round(totalSeconds / 60);
       if (totalMin > 0) {
         sub += sub ? " · " : "";
-        sub += `Cook ${totalMin} min`;
+        sub += fill(this._L.header.cook, { min: totalMin });
       }
     } else if (remaining != null && remaining > 0) {
       sub += sub ? " · " : "";
-      sub += `endet in ${fmtTime(remaining)}`;
+      sub += fill(this._L.header.endsIn, { time: fmtTime(remaining) });
     }
     if (!sub) {
       if (!integrationLoaded) {
-        sub = "Integration nicht geladen";
+        sub = this._L.header.notLoaded;
       } else if (!cloudReachable) {
-        sub = "Verbindung verloren — auf Power on tippen wenn online";
+        sub = this._L.header.disconnected;
       } else if (isOff) {
-        sub = "Grill ist aus — auf Power on tippen zum Aufwecken";
+        sub = this._L.header.off;
       } else {
-        sub = "Lege etwas auf den Grill, wenn du startest";
+        sub = this._L.header.idleHint;
       }
     }
     this._setHTML("header-sub", sub);
 
     // ----- Advisory banner (flip / get food / insert food / halftime) -----
-    let advisoryText = ADVISORY_LABELS_DE[cookState];
+    let advisoryText = this._L.advisory[cookState];
     if (!advisoryText && isActive && totalSeconds > 0 && remaining != null
         && remaining > 0 && remaining <= totalSeconds / 2 && remaining > totalSeconds / 2 - 60) {
-      advisoryText = "Halbzeit";
+      advisoryText = this._L.advisory.halftime;
     }
     const advisoryEl = this.shadowRoot.querySelector("#advisory");
     if (advisoryEl) {
@@ -552,7 +716,9 @@ class WoodfireGrillCard extends HTMLElement {
             preheatPct != null ? `${preheatPct}%` : "100%");
           bar.classList.add("preheat-mode");
           this._setText("progress-label",
-            preheatPct != null ? `Vorheizen ${Math.round(preheatPct)}%` : "Vorheizen");
+            preheatPct != null
+              ? fill(this._L.progress.preheatPct, { pct: Math.round(preheatPct) })
+              : this._L.progress.preheat);
         } else {
           bar.classList.remove("preheat-mode");
           let pct = 0;
@@ -572,7 +738,7 @@ class WoodfireGrillCard extends HTMLElement {
     this._setTempCell("grill-temp", grillTemp, "°C");
     this._setTempCell("air-temp", airTemp, "°C");
     this._setTempCell("smoke-temp", smokeTemp, "°C");
-    this._setText("lid-value", lidOpen ? "offen" : "zu");
+    this._setText("lid-value", lidOpen ? this._L.lid.open : this._L.lid.closed);
     const lidIconEl = this.shadowRoot.querySelector("#lid-icon");
     if (lidIconEl) {
       lidIconEl.setAttribute("icon", lidOpen ? "mdi:square-rounded-outline" : "mdi:square-rounded");
@@ -590,11 +756,11 @@ class WoodfireGrillCard extends HTMLElement {
       if (!integrationLoaded) {
         banner.style.display = "flex";
         if (bannerText) bannerText.textContent =
-          "Ninja-Woodfire-Integration nicht geladen — Settings → Devices & Services prüfen.";
+          this._L.banner.notLoaded;
       } else if (!cloudReachable) {
         banner.style.display = "flex";
         if (bannerText) bannerText.textContent =
-          "Grill nicht erreichbar — Cloud-Verbindung verloren.";
+          this._L.banner.unreachable;
       } else {
         banner.style.display = "none";
       }
@@ -613,19 +779,18 @@ class WoodfireGrillCard extends HTMLElement {
     const showAsPower = isOff || !cloudReachable || !integrationLoaded;
     const pending = this._pendingAction;
     // Map button → label/icon to swap in while it's the pending one.
-    const PENDING_LABEL = { start: "Startet…", power: "Aufwecken…",
-                            stop: "Stoppt…", skip: "Springt…" };
+    const PENDING_LABEL = this._L.pending;
 
     if (startBtn && startIcon && startLabel) {
       if (showAsPower) {
         startBtn.classList.add("is-power");
         startIcon.setAttribute("icon", "mdi:power");
-        startLabel.textContent = "Power on";
+        startLabel.textContent = this._L.button.power;
         startBtn.toggleAttribute("disabled", !integrationLoaded);
       } else {
         startBtn.classList.remove("is-power");
         startIcon.setAttribute("icon", "mdi:play");
-        startLabel.textContent = "Start";
+        startLabel.textContent = this._L.button.start;
         this._setBtnDisabled("btn-start", isActive);
       }
       // Pending overrides everything: spinner + label + disable.
@@ -655,7 +820,7 @@ class WoodfireGrillCard extends HTMLElement {
           stopIcon.classList.remove("spin");
         }
         stopBtn.childNodes.forEach(n => {
-          if (n.nodeType === 3) n.textContent = " Stop";
+          if (n.nodeType === 3) n.textContent = " " + this._L.button.stop;
         });
       }
     }
@@ -682,7 +847,7 @@ class WoodfireGrillCard extends HTMLElement {
           skipIcon.classList.remove("spin");
         }
         skipBtn.childNodes.forEach(n => {
-          if (n.nodeType === 3) n.textContent = " Skip preheat";
+          if (n.nodeType === 3) n.textContent = " " + this._L.button.skip;
         });
       }
     }
@@ -732,7 +897,7 @@ class WoodfireGrillCard extends HTMLElement {
     const pct = Math.max(0, Math.min(100, progress));
     const color = pct >= 100 ? "#4caf50" : pct >= 80 ? "#ff9800" : "#e74c3c";
     block.querySelector(".probe-name").innerHTML =
-      `Sonde ${uiIdx}${active ? ' <span class="dot"></span>' : ""}`;
+      `${fill(this._L.probe.name, { n: uiIdx })}${active ? ' <span class="dot"></span>' : ""}`;
     block.querySelector(".probe-stats").innerHTML =
       `${temp != null ? Math.round(temp * 10) / 10 + "°C" : "—"}${target ? ` → <strong>${target}°C</strong>` : ""} (${Math.round(pct)}%)`;
     const fill = block.querySelector(".probe-fill");
@@ -894,12 +1059,13 @@ class WoodfireGrillCard extends HTMLElement {
     // dynamic content (mode <option>s, heat-vs-slider, slider ranges)
     // have placeholder containers (#ctl-mode, #ctl-temp-slot) that
     // _refreshControlValues fills in-place.
+    const L = this._L;
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <ha-card>
         <div id="unavail-banner" class="unavail-banner" style="display:none">
           <ha-icon icon="mdi:cloud-off-outline"></ha-icon>
-          <span id="unavail-text">Grill nicht erreichbar</span>
+          <span id="unavail-text">${L.banner.unreachableShort}</span>
         </div>
         <div id="header" class="header">
           <div id="header-icon" class="header-icon"></div>
@@ -919,22 +1085,22 @@ class WoodfireGrillCard extends HTMLElement {
         <div class="temps">
           <div id="grill-temp" class="temp">
             <ha-icon icon="mdi:thermometer" style="--mdc-icon-size:28px;color:#e74c3c"></ha-icon>
-            <div class="temp-label">Grill</div>
+            <div class="temp-label">${L.temp.grill}</div>
             <div class="temp-value">—</div>
           </div>
           <div id="air-temp" class="temp">
             <ha-icon icon="mdi:thermometer-low" style="--mdc-icon-size:28px;color:#f39c12"></ha-icon>
-            <div class="temp-label">Luft</div>
+            <div class="temp-label">${L.temp.air}</div>
             <div class="temp-value">—</div>
           </div>
           <div id="smoke-temp" class="temp">
             <ha-icon icon="mdi:smoke" style="--mdc-icon-size:28px;color:#7f8c8d"></ha-icon>
-            <div class="temp-label">Rauch</div>
+            <div class="temp-label">${L.temp.smoke}</div>
             <div class="temp-value">—</div>
           </div>
           <div class="temp">
             <ha-icon id="lid-icon" icon="mdi:square-rounded" style="--mdc-icon-size:28px"></ha-icon>
-            <div class="temp-label">Deckel</div>
+            <div class="temp-label">${L.temp.lid}</div>
             <div id="lid-value" class="temp-value">—</div>
           </div>
         </div>
@@ -942,7 +1108,7 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-1" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">Sonde 1</div>
+            <div class="probe-name">${fill(L.probe.name, { n: 1 })}</div>
             <div class="probe-stats"></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
@@ -950,7 +1116,7 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-2" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">Sonde 2</div>
+            <div class="probe-name">${fill(L.probe.name, { n: 2 })}</div>
             <div class="probe-stats"></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
@@ -959,36 +1125,36 @@ class WoodfireGrillCard extends HTMLElement {
         <div class="control">
           <button type="button" id="ctl-toggle" class="ctl-toggle" aria-expanded="false">
             <span class="summary-icon">⚙</span>
-            <span class="summary-label">Kochen einstellen</span>
+            <span class="summary-label">${L.control.title}</span>
             <span class="summary-arrow">▾</span>
           </button>
           <div id="ctl-panel" class="ctl-panel" hidden>
             <div class="ctrl-grid">
-              <label>Modus</label>
+              <label>${L.control.mode}</label>
               <select id="ctl-mode"></select>
 
-              <label id="ctl-temp-label">Hitze</label>
+              <label id="ctl-temp-label">${L.control.heat}</label>
               <div id="ctl-temp-slot"></div>
 
-              <label>Dauer (min)</label>
+              <label>${L.control.duration}</label>
               <div class="row">
                 <input id="ctl-dur" type="range" min="1" max="720" value="30">
                 <span id="ctl-dur-badge" class="badge">30m</span>
               </div>
 
-              <label>Rauch (Woodfire)</label>
+              <label>${L.control.smoke}</label>
               <ha-switch id="ctl-smoke"></ha-switch>
 
-              <label>Vorheizen überspringen</label>
+              <label>${L.control.skipPreheat}</label>
               <ha-switch id="ctl-skip"></ha-switch>
 
-              <label>Sonde 1 Ziel</label>
+              <label>${fill(L.probe.target, { n: 1 })}</label>
               <div class="row">
                 <ha-switch id="ctl-probe1en"></ha-switch>
                 <input id="ctl-probe1temp" type="number" min="30" max="110" value="60" class="num">
               </div>
 
-              <label>Sonde 2 Ziel</label>
+              <label>${fill(L.probe.target, { n: 2 })}</label>
               <div class="row">
                 <ha-switch id="ctl-probe2en"></ha-switch>
                 <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num">
@@ -1000,10 +1166,10 @@ class WoodfireGrillCard extends HTMLElement {
         <div class="actions actions-primary">
           <button id="btn-start" class="btn btn-start">
             <ha-icon id="btn-start-icon" icon="mdi:play"></ha-icon>
-            <span id="btn-start-label">Start</span>
+            <span id="btn-start-label">${L.button.start}</span>
           </button>
-          <button id="btn-stop" class="btn btn-stop"><ha-icon icon="mdi:stop"></ha-icon> Stop</button>
-          <button id="btn-skip" class="btn btn-skip"><ha-icon icon="mdi:fast-forward"></ha-icon> Skip preheat</button>
+          <button id="btn-stop" class="btn btn-stop"><ha-icon icon="mdi:stop"></ha-icon> ${L.button.stop}</button>
+          <button id="btn-skip" class="btn btn-skip"><ha-icon icon="mdi:fast-forward"></ha-icon> ${L.button.skip}</button>
         </div>
       </ha-card>
     `;
@@ -1139,8 +1305,8 @@ class WoodfireGrillCard extends HTMLElement {
     const variantChanged = slot.dataset.variant !== wantVariant;
     if (variantChanged) {
       labelEl.textContent = isHeatLevel
-        ? "Hitze"
-        : `Temp${tempUnit ? ` (${tempUnit})` : ""}`;
+        ? this._L.control.heat
+        : `${this._L.control.temp}${tempUnit ? ` (${tempUnit})` : ""}`;
 
       if (isHeatLevel) {
         slot.innerHTML = `
@@ -1232,7 +1398,7 @@ class WoodfireGrillCard extends HTMLElement {
                  currentValues.every((v, i) => v === opts[i]);
     if (!same) {
       sel.innerHTML = opts
-        .map(o => `<option value="${escapeHtml(o)}">${escapeHtml(MODE_LABELS_DE[o] || o)}</option>`)
+        .map(o => `<option value="${escapeHtml(o)}">${escapeHtml(this._L.mode[o] || o)}</option>`)
         .join("");
     }
 

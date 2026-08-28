@@ -18,6 +18,8 @@ live state, temperatures, probes, and one-tap controls on a single tile.
   Celsius slider for everything else)
 - Cook-mode dropdown, duration slider, smoke / skip-preheat toggles
 - Start / Stop / Skip-Preheat actions
+- Follows the Home Assistant user's language (English and German; anything
+  else falls back to English)
 
 ## Requirements
 
@@ -49,12 +51,42 @@ live state, temperatures, probes, and one-tap controls on a single tile.
 
 ```yaml
 type: custom:woodfire-grill-card
-dsn: ac000w036025444   # your grill's DSN
+dsn: ac000w000000000   # your grill's DSN
 ```
 
 | Option | Required | Description |
 |--------|----------|-------------|
 | `dsn`  | yes      | The grill's DSN (case-insensitive). Find it under *Settings → Devices → Ninja Woodfire*. |
+
+## Languages
+
+The card uses whatever language is set on the Home Assistant profile, falling
+back to English for anything it does not have. Regional codes work too, so
+`de-AT` and `de-DE` both resolve to German.
+
+Adding a language is data, not code. Copy the `en` block in `TRANSLATIONS` near
+the top of `dist/woodfire-grill-card.js`, translate the values, and key it by the
+language code:
+
+```js
+const TRANSLATIONS = {
+  en: { /* … */ },
+  de: { /* … */ },
+  nl: { state: { idle: "Gereed", /* … */ } },   // new
+};
+```
+
+Partial translations are fine: any key left out falls back to English rather
+than showing a raw placeholder, so a block can be filled in over time. Mode
+names that are product terms (*Smoker*, *Air Crisp*) are usually left
+untranslated, as the appliance itself does.
+
+Two checks after editing:
+
+```bash
+node test/i18n.test.mjs     # missing keys, typos, dropped {placeholders}
+open test/preview.html      # renders every language side by side, no HA needed
+```
 
 ## Status & support
 

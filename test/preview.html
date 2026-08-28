@@ -1,0 +1,147 @@
+<!doctype html>
+<!--
+  Standalone preview for woodfire-grill-card.
+
+  The card normally only exists inside Home Assistant, which makes visual
+  changes awkward to check. This stubs just enough of `hass` to render it
+  against a plausible mid-cook state, side by side in every language the
+  card knows, so translations can be eyeballed without a grill.
+
+  Open it directly in a browser: no server, no build.
+-->
+<meta charset="utf-8">
+<title>woodfire-grill-card preview</title>
+<style>
+  :root { --primary-text-color:#111; --secondary-text-color:#666;
+          --card-background-color:#fff; --divider-color:#e0e0e0;
+          --disabled-color:#9e9e9e; --primary-color:#03a9f4;
+          --ha-card-border-radius:12px; --error-color:#e74c3c; }
+  body { font-family: Roboto, system-ui, sans-serif; background:#f5f5f5;
+         margin:0; padding:24px; color:var(--primary-text-color); }
+  h1 { font-size:16px; font-weight:500; margin:0 0 20px; }
+  .row { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+  .col { width:420px; }
+  .col h2 { font-size:13px; text-transform:uppercase; letter-spacing:.06em;
+            color:var(--secondary-text-color); margin:0 0 8px; }
+  ha-card { display:block; background:var(--card-background-color);
+            border-radius:var(--ha-card-border-radius);
+            box-shadow:0 1px 3px rgba(0,0,0,.12); overflow:hidden; }
+</style>
+
+<h1>woodfire-grill-card — translation preview</h1>
+<div class="row" id="row"></div>
+
+<script src="../dist/woodfire-grill-card.js"></script>
+<script>
+  // Minimal stand-ins for the Home Assistant elements the card uses.
+  class HaCard extends HTMLElement {}
+  customElements.define("ha-card", HaCard);
+  class HaIcon extends HTMLElement {
+    static get observedAttributes() { return ["icon"]; }
+    connectedCallback() { this.style.display = "inline-block";
+      this.style.width = "24px"; this.style.height = "24px";
+      this.style.background = "currentColor"; this.style.opacity = ".35";
+      this.style.borderRadius = "4px"; }
+  }
+  customElements.define("ha-icon", HaIcon);
+  // ha-switch is a checkbox in disguise; the card only reads/sets `.checked`
+  // and listens for change events, so a styled checkbox behaves identically.
+  class HaSwitch extends HTMLElement {
+    connectedCallback() {
+      if (this._box) return;
+      this._box = document.createElement("input");
+      this._box.type = "checkbox";
+      this._box.style.cssText = "width:36px;height:20px;margin:0;cursor:pointer";
+      this._box.checked = this._pending ?? false;
+      this._box.addEventListener("change", () => {
+        this.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      this.appendChild(this._box);
+    }
+    get checked() { return this._box ? this._box.checked : (this._pending ?? false); }
+    set checked(v) { if (this._box) this._box.checked = !!v; else this._pending = !!v; }
+    get disabled() { return this.hasAttribute("disabled"); }
+  }
+  customElements.define("ha-switch", HaSwitch);
+
+  const DSN = "ac000w000000000";
+
+  // A grill three minutes into an 8-minute grill cook, past preheat.
+  const VALUES = {
+    "sensor.grill_state":      { state: "cooking" },
+    "sensor.cook_state":       { state: "heat" },
+    "sensor.active_mode":      { state: "grill" },
+    "sensor.setpoint":         { state: "Med" },
+    "sensor.grill_temp":       { state: "247.5", unit: "°C" },
+    "sensor.air_temp":         { state: "unavailable" },
+    "sensor.smoke_temp":       { state: "unavailable" },
+    "sensor.cook_progress":    { state: "38", unit: "%" },
+    "sensor.preheat_progress": { state: "unavailable", unit: "%" },
+    "sensor.end_time":         { state: new Date(Date.now() + 305e3).toISOString() },
+    "sensor.probe0_temp":      { state: "41.5", unit: "°C" },
+    "sensor.probe0_setpoint":  { state: "63", unit: "°C" },
+    "sensor.probe0_progress":  { state: "44", unit: "%" },
+    "sensor.probe1_temp":      { state: "unavailable" },
+    "sensor.probe1_setpoint":  { state: "unavailable" },
+    "sensor.probe1_progress":  { state: "unavailable" },
+    "binary_sensor.lid_open":         { state: "off" },
+    "binary_sensor.probe0_plugged_in":{ state: "on" },
+    "binary_sensor.probe1_plugged_in":{ state: "off" },
+    "binary_sensor.probe0_active":    { state: "on" },
+    "binary_sensor.probe1_active":    { state: "off" },
+    "select.cook_mode":  { state: "grill",
+      attrs: { options: ["grill","smoker","bake","roast","dehydrate","reheat","air crisp"] } },
+    "number.cook_temp":  { state: "2", attrs: { min:1, max:3, step:1, unit_of_measurement:"level" } },
+    "number.cook_duration": { state: "8",
+      attrs: { min:1, max:120, step:1, unit_of_measurement:"min" } },
+    "number.probe0_target_temp": { state: "63",
+      attrs: { min:30, max:110, step:1, unit_of_measurement:"°C" } },
+    "number.probe1_target_temp": { state: "60",
+      attrs: { min:30, max:110, step:1, unit_of_measurement:"°C" } },
+    "switch.cook_smoke":        { state: "off" },
+    "switch.cook_skip_preheat": { state: "off" },
+    "switch.probe0_enabled":    { state: "on" },
+    "switch.probe1_enabled":    { state: "off" },
+    "button.start_cook": { state: "unknown" },
+    "button.stop_cook":  { state: "unknown" },
+    "button.skip_preheat": { state: "unknown" },
+  };
+
+  function makeHass(language) {
+    const states = {}, entities = {};
+    for (const [key, v] of Object.entries(VALUES)) {
+      const [domain, obj] = key.split(".");
+      const eid = `${domain}.woodninja_${obj}`;
+      states[eid] = {
+        entity_id: eid,
+        state: v.state,
+        attributes: { friendly_name: obj, unit_of_measurement: v.unit, ...(v.attrs || {}) },
+        last_changed: new Date().toISOString(),
+      };
+      entities[eid] = { entity_id: eid, unique_id: `${DSN}_${obj}`, platform: "ninja_woodfire" };
+    }
+    return {
+      language, locale: { language },
+      states, entities,
+      config: { components: ["ninja_woodfire"] },
+      callService: (d, s, data) => console.log("callService", d, s, data),
+    };
+  }
+
+  const row = document.getElementById("row");
+  for (const lang of ["en", "de"]) {
+    const col = document.createElement("div");
+    col.className = "col";
+    col.innerHTML = `<h2>${lang}</h2>`;
+    const card = document.createElement("woodfire-grill-card");
+    card.setConfig({ type: "custom:woodfire-grill-card", dsn: DSN });
+    card.hass = makeHass(lang);
+    col.appendChild(card);
+    row.appendChild(col);
+    // Open the settings panel so its labels are visible in the screenshot.
+    setTimeout(() => {
+      const t = card.shadowRoot && card.shadowRoot.querySelector("#ctl-toggle");
+      if (t) t.click();
+    }, 120);
+  }
+</script>
