@@ -118,11 +118,13 @@
         attributes: { friendly_name: obj, unit_of_measurement: v.unit, ...(v.attrs || {}) },
         last_changed: new Date().toISOString(),
       };
-      entities[eid] = { entity_id: eid, unique_id: `${DSN}_${obj}`, platform: "ninja_woodfire" };
+      entities[eid] = { entity_id: eid, platform: "ninja_woodfire",
+                        translation_key: obj, device_id: "grill" };
     }
     return {
       language, locale: { language },
       states, entities,
+      devices: { grill: { identifiers: [["ninja_woodfire", DSN]] } },
       config: { components: ["ninja_woodfire"] },
       callService: (d, s, data) => console.log("callService", d, s, data),
     };

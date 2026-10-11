@@ -19,7 +19,7 @@ const source = readFileSync(join(here, "..", "dist", "woodfire-grill-card.js"), 
 
 const sandbox = {
   HTMLElement: class {},
-  customElements: { define() {} },
+  customElements: { define() {}, get() {} },
   window: {},
   console: { info() {} },
   setInterval() {}, clearInterval() {}, setTimeout() {}, clearTimeout() {},
@@ -49,7 +49,7 @@ test("English is complete and is the fallback base", () => {
   assert.ok(TRANSLATIONS.en, "no English block");
   for (const section of ["state", "advisory", "mode", "header", "banner",
                          "pending", "button", "temp", "lid", "probe",
-                         "control", "progress"]) {
+                         "control", "progress", "level", "toast"]) {
     assert.ok(TRANSLATIONS.en[section], `en.${section} missing`);
   }
 });
@@ -91,7 +91,7 @@ test("placeholders survive translation", () => {
   // A language that drops {min} or {time} would render a sentence with the
   // number silently missing, which is worse than an untranslated string.
   const withPlaceholders = { header: ["cook", "endsIn"], probe: ["name", "target"],
-                             progress: ["preheatPct"] };
+                             progress: ["preheatPct"], toast: ["callFailed"] };
   for (const [lang, block] of Object.entries(TRANSLATIONS)) {
     for (const [section, keys] of Object.entries(withPlaceholders)) {
       for (const key of keys) {

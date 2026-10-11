@@ -9,7 +9,7 @@
  *   dsn: <your grill's DSN>   (optional with a single grill)
  */
 
-const VERSION = "0.16.0";
+const VERSION = "0.17.0";
 const INTEGRATION_PLATFORM = "ninja_woodfire";
 console.info(
   `%c WOODFIRE-GRILL-CARD %c ${VERSION} `,
@@ -124,6 +124,8 @@ const TRANSLATIONS = {
       skipPreheat: "Skip preheat",
     },
     progress: { preheat: "Preheating", preheatPct: "Preheating {pct}%" },
+    level: { 1: "Lo", 2: "Med", 3: "Hi" },
+    toast: { callFailed: "Woodfire: {service} failed ({reason})" },
   },
 
   de: {
@@ -178,7 +180,7 @@ const TRANSLATIONS = {
       endsIn: "endet in {time}",
       notLoaded: "Integration nicht geladen",
       disconnected: "Keine Verbindung zum Grill",
-      off: "Grill ist aus \u2014 auf Power on tippen zum Aufwecken",
+      off: "Grill ist aus \u2014 auf Einschalten tippen zum Aufwecken",
       idleHint: "Lege etwas auf den Grill, wenn du startest",
     },
     banner: {
@@ -201,6 +203,8 @@ const TRANSLATIONS = {
       skipPreheat: "Vorheizen \u00fcberspringen",
     },
     progress: { preheat: "Vorheizen", preheatPct: "Vorheizen {pct}%" },
+    level: { 1: "Niedrig", 2: "Mittel", 3: "Hoch" },
+    toast: { callFailed: "Woodfire: {service} fehlgeschlagen ({reason})" },
   },
 };
 
@@ -489,7 +493,7 @@ class WoodfireGrillCard extends HTMLElement {
   _callFailed(domain, service, err) {
     const reason = (err && (err.message || err.code)) || String(err);
     this.dispatchEvent(new CustomEvent("hass-notification", {
-      detail: { message: `Woodfire: ${domain}.${service} fehlgeschlagen (${reason})` },
+      detail: { message: fill(this._L.toast.callFailed, { service: `${domain}.${service}`, reason }) },
       bubbles: true,
       composed: true,
     }));
@@ -655,8 +659,9 @@ class WoodfireGrillCard extends HTMLElement {
       // numeric °C otherwise.
       const isLevel = typeof setpointDisplay === "string" &&
                       isNaN(parseFloat(setpointDisplay));
+      const level = isLevel && SETPOINT_LEVELS[setpointDisplay.toLowerCase()];
       sub += isLevel
-        ? escapeHtml(setpointDisplay)
+        ? escapeHtml(level ? this._L.level[level] : setpointDisplay)
         : `${setpointDisplay}${cookMode === "grill" ? "" : "°C"}`;
     }
     // The cook timer counts down even during preheat (firmware
@@ -788,7 +793,7 @@ class WoodfireGrillCard extends HTMLElement {
 
     const showAsPower = isOff || !cloudReachable || !integrationLoaded;
     // Power-on fires stop_cook; without a reachable grill / button
-    // entity it can't do anything, so show "Keine Verbindung" instead.
+    // entity it can't do anything, so show "no connection" instead.
     const stopEntityState = this._rawState("button", "stop_cook");
     const noConnection = !cloudReachable || stopEntityState == null
                          || stopEntityState === "unavailable";
@@ -920,9 +925,9 @@ class WoodfireGrillCard extends HTMLElement {
     block.querySelector(".probe-target-wrap").hidden = !target;
     setText(".probe-target", target ? `${target}°C` : "");
     setText(".probe-pct", `(${Math.round(pct)}%)`);
-    const fill = block.querySelector(".probe-fill");
-    fill.style.width = `${pct}%`;
-    fill.style.background = color;
+    const fillEl = block.querySelector(".probe-fill");
+    fillEl.style.width = `${pct}%`;
+    fillEl.style.background = color;
     const icon = block.querySelector("ha-icon");
     if (icon) icon.style.color = color;
   }
@@ -1334,9 +1339,9 @@ class WoodfireGrillCard extends HTMLElement {
       if (isHeatLevel) {
         slot.innerHTML = `
           <div id="ctl-heat" class="seg-group">
-            <button type="button" class="seg" data-val="1">Lo</button>
-            <button type="button" class="seg" data-val="2">Med</button>
-            <button type="button" class="seg" data-val="3">Hi</button>
+            <button type="button" class="seg" data-val="1">${this._L.level[1]}</button>
+            <button type="button" class="seg" data-val="2">${this._L.level[2]}</button>
+            <button type="button" class="seg" data-val="3">${this._L.level[3]}</button>
           </div>
         `;
         const group = slot.querySelector("#ctl-heat");
