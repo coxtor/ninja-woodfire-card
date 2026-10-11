@@ -67,7 +67,8 @@ dsn: AC000W0XXXXXXXX   # optional, only needed with multiple grills
 
 The card uses whatever language is set on the Home Assistant profile, falling
 back to English for anything it does not have. Regional codes work too, so
-`de-AT` and `de-DE` both resolve to German.
+`de-AT` and `de-DE` both resolve to German. Earlier versions were German-only; profiles
+set to any other language now get English.
 
 Adding a language is data, not code. Copy the `en` block in `TRANSLATIONS` near
 the top of `dist/woodfire-grill-card.js`, translate the values, and key it by the

@@ -184,11 +184,11 @@ const TRANSLATIONS = {
       idleHint: "Lege etwas auf den Grill, wenn du startest",
     },
     banner: {
-      notLoaded: "Ninja-Woodfire-Integration nicht geladen \u2014 Settings \u2192 Devices & Services pr\u00fcfen.",
+      notLoaded: "Ninja-Woodfire-Integration nicht geladen \u2014 Einstellungen \u2192 Ger\u00e4te & Dienste pr\u00fcfen.",
       unreachable: "Grill nicht erreichbar \u2014 Cloud-Verbindung verloren.",
       unreachableShort: "Grill nicht erreichbar",
     },
-    pending: { start: "Startet\u2026", power: "Aufwecken\u2026", stop: "Stoppt\u2026", skip: "Springt\u2026" },
+    pending: { start: "Startet\u2026", power: "Aufwecken\u2026", stop: "Stoppt\u2026", skip: "\u00dcberspringe\u2026" },
     button: { power: "Einschalten", noConnection: "Keine Verbindung", start: "Start", stop: "Stopp", skip: "Vorheizen \u00fcberspringen" },
     temp: { grill: "Grill", air: "Luft", smoke: "Rauch", lid: "Deckel" },
     lid: { open: "offen", closed: "zu" },
@@ -249,8 +249,6 @@ const ICON_FOR_STATE = {
   powered_off: "mdi:power",
   off: "mdi:power",
 };
-
-
 
 const COLOR_FOR_STATE = {
   idle: "var(--disabled-color)",
@@ -676,21 +674,21 @@ class WoodfireGrillCard extends HTMLElement {
       const totalMin = Math.round(totalSeconds / 60);
       if (totalMin > 0) {
         sub += sub ? " · " : "";
-        sub += fill(this._L.header.cook, { min: totalMin });
+        sub += escapeHtml(fill(this._L.header.cook, { min: totalMin }));
       }
     } else if (remaining != null && remaining > 0) {
       sub += sub ? " · " : "";
-      sub += fill(this._L.header.endsIn, { time: fmtTime(remaining) });
+      sub += escapeHtml(fill(this._L.header.endsIn, { time: fmtTime(remaining) }));
     }
     if (!sub) {
       if (!integrationLoaded) {
-        sub = this._L.header.notLoaded;
+        sub = escapeHtml(this._L.header.notLoaded);
       } else if (!cloudReachable) {
-        sub = this._L.header.disconnected;
+        sub = escapeHtml(this._L.header.disconnected);
       } else if (isOff) {
-        sub = this._L.header.off;
+        sub = escapeHtml(this._L.header.off);
       } else {
-        sub = this._L.header.idleHint;
+        sub = escapeHtml(this._L.header.idleHint);
       }
     }
     this._setHTML("header-sub", sub);
@@ -1094,7 +1092,7 @@ class WoodfireGrillCard extends HTMLElement {
       <ha-card>
         <div id="unavail-banner" class="unavail-banner" style="display:none">
           <ha-icon icon="mdi:cloud-off-outline"></ha-icon>
-          <span id="unavail-text">${L.banner.unreachableShort}</span>
+          <span id="unavail-text">${escapeHtml(L.banner.unreachableShort)}</span>
         </div>
         <div id="header" class="header">
           <div id="header-icon" class="header-icon"></div>
@@ -1114,22 +1112,22 @@ class WoodfireGrillCard extends HTMLElement {
         <div class="temps">
           <div id="grill-temp" class="temp">
             <ha-icon icon="mdi:thermometer" style="--mdc-icon-size:28px;color:#e74c3c"></ha-icon>
-            <div class="temp-label">${L.temp.grill}</div>
+            <div class="temp-label">${escapeHtml(L.temp.grill)}</div>
             <div class="temp-value">—</div>
           </div>
           <div id="air-temp" class="temp">
             <ha-icon icon="mdi:thermometer-low" style="--mdc-icon-size:28px;color:#f39c12"></ha-icon>
-            <div class="temp-label">${L.temp.air}</div>
+            <div class="temp-label">${escapeHtml(L.temp.air)}</div>
             <div class="temp-value">—</div>
           </div>
           <div id="smoke-temp" class="temp">
             <ha-icon icon="mdi:smoke" style="--mdc-icon-size:28px;color:#7f8c8d"></ha-icon>
-            <div class="temp-label">${L.temp.smoke}</div>
+            <div class="temp-label">${escapeHtml(L.temp.smoke)}</div>
             <div class="temp-value">—</div>
           </div>
           <div class="temp">
             <ha-icon id="lid-icon" icon="mdi:square-rounded" style="--mdc-icon-size:28px"></ha-icon>
-            <div class="temp-label">${L.temp.lid}</div>
+            <div class="temp-label">${escapeHtml(L.temp.lid)}</div>
             <div id="lid-value" class="temp-value">—</div>
           </div>
         </div>
@@ -1137,7 +1135,7 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-1" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">${fill(L.probe.name, { n: 1 })}<span class="dot" style="display:none"></span></div>
+            <div class="probe-name">${escapeHtml(fill(L.probe.name, { n: 1 }))}<span class="dot" style="display:none"></span></div>
             <div class="probe-stats"><span class="probe-temp">—</span><span class="probe-target-wrap" hidden> → <strong class="probe-target"></strong></span> <span class="probe-pct"></span></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
@@ -1145,7 +1143,7 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-2" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">${fill(L.probe.name, { n: 2 })}<span class="dot" style="display:none"></span></div>
+            <div class="probe-name">${escapeHtml(fill(L.probe.name, { n: 2 }))}<span class="dot" style="display:none"></span></div>
             <div class="probe-stats"><span class="probe-temp">—</span><span class="probe-target-wrap" hidden> → <strong class="probe-target"></strong></span> <span class="probe-pct"></span></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
@@ -1154,36 +1152,36 @@ class WoodfireGrillCard extends HTMLElement {
         <div class="control">
           <button type="button" id="ctl-toggle" class="ctl-toggle" aria-expanded="false">
             <span class="summary-icon">⚙</span>
-            <span class="summary-label">${L.control.title}</span>
+            <span class="summary-label">${escapeHtml(L.control.title)}</span>
             <span class="summary-arrow">▾</span>
           </button>
           <div id="ctl-panel" class="ctl-panel" hidden>
             <div class="ctrl-grid">
-              <label>${L.control.mode}</label>
+              <label>${escapeHtml(L.control.mode)}</label>
               <select id="ctl-mode"></select>
 
-              <label id="ctl-temp-label">${L.control.heat}</label>
+              <label id="ctl-temp-label">${escapeHtml(L.control.heat)}</label>
               <div id="ctl-temp-slot"></div>
 
-              <label>${L.control.duration}</label>
+              <label>${escapeHtml(L.control.duration)}</label>
               <div class="row">
                 <input id="ctl-dur" type="range" min="1" max="720" value="30">
                 <span id="ctl-dur-badge" class="badge">30m</span>
               </div>
 
-              <label>${L.control.smoke}</label>
+              <label>${escapeHtml(L.control.smoke)}</label>
               <ha-switch id="ctl-smoke"></ha-switch>
 
-              <label>${L.control.skipPreheat}</label>
+              <label>${escapeHtml(L.control.skipPreheat)}</label>
               <ha-switch id="ctl-skip"></ha-switch>
 
-              <label>${fill(L.probe.target, { n: 1 })}</label>
+              <label>${escapeHtml(fill(L.probe.target, { n: 1 }))}</label>
               <div class="row">
                 <ha-switch id="ctl-probe1en"></ha-switch>
                 <input id="ctl-probe1temp" type="number" min="30" max="110" value="60" class="num">
               </div>
 
-              <label>${fill(L.probe.target, { n: 2 })}</label>
+              <label>${escapeHtml(fill(L.probe.target, { n: 2 }))}</label>
               <div class="row">
                 <ha-switch id="ctl-probe2en"></ha-switch>
                 <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num">
@@ -1195,10 +1193,10 @@ class WoodfireGrillCard extends HTMLElement {
         <div class="actions actions-primary">
           <button id="btn-start" class="btn btn-start">
             <ha-icon id="btn-start-icon" icon="mdi:play"></ha-icon>
-            <span id="btn-start-label">${L.button.start}</span>
+            <span id="btn-start-label">${escapeHtml(L.button.start)}</span>
           </button>
-          <button id="btn-stop" class="btn btn-stop"><ha-icon icon="mdi:stop"></ha-icon> ${L.button.stop}</button>
-          <button id="btn-skip" class="btn btn-skip"><ha-icon icon="mdi:fast-forward"></ha-icon> ${L.button.skip}</button>
+          <button id="btn-stop" class="btn btn-stop"><ha-icon icon="mdi:stop"></ha-icon> ${escapeHtml(L.button.stop)}</button>
+          <button id="btn-skip" class="btn btn-skip"><ha-icon icon="mdi:fast-forward"></ha-icon> ${escapeHtml(L.button.skip)}</button>
         </div>
       </ha-card>
     `;
@@ -1339,9 +1337,9 @@ class WoodfireGrillCard extends HTMLElement {
       if (isHeatLevel) {
         slot.innerHTML = `
           <div id="ctl-heat" class="seg-group">
-            <button type="button" class="seg" data-val="1">${this._L.level[1]}</button>
-            <button type="button" class="seg" data-val="2">${this._L.level[2]}</button>
-            <button type="button" class="seg" data-val="3">${this._L.level[3]}</button>
+            <button type="button" class="seg" data-val="1">${escapeHtml(this._L.level[1])}</button>
+            <button type="button" class="seg" data-val="2">${escapeHtml(this._L.level[2])}</button>
+            <button type="button" class="seg" data-val="3">${escapeHtml(this._L.level[3])}</button>
           </div>
         `;
         const group = slot.querySelector("#ctl-heat");
