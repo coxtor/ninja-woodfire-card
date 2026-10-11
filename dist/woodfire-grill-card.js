@@ -6,10 +6,10 @@
  *
  * Config:
  *   type: custom:woodfire-grill-card
- *   dsn: <your grill's DSN>
+ *   dsn: <your grill's DSN>   (optional with a single grill)
  */
 
-const VERSION = "0.15.0";
+const VERSION = "0.16.0";
 const INTEGRATION_PLATFORM = "ninja_woodfire";
 console.info(
   `%c WOODFIRE-GRILL-CARD %c ${VERSION} `,
@@ -115,6 +115,17 @@ const COLOR_FOR_STATE = {
   off: "var(--disabled-color)",
 };
 
+const ACTIVE_STATES = new Set([
+  "preheat", "preheating", "start", "ignition",
+  "heat", "cooking", "cook", "rest", "resting",
+  "flip", "flip_food", "get food", "get_food",
+  "insert food", "insert_food", "lid open", "lid_open",
+]);
+
+const SETPOINT_LEVELS = { lo: 1, med: 2, hi: 3, high: 3 };
+
+const MODE_TRANSITION_TIMEOUT_MS = 5000;
+
 const escapeHtml = (s) => String(s ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
   .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -151,19 +162,24 @@ class WoodfireGrillCard extends HTMLElement {
     this._pendingDeadline = 0;         // unix ms; pending self-clears after this
     // Mode-transition: between selecting a new mode and HA pushing
     // the new ranges/units back, the temp + duration controls are
-    // momentarily mismatched. We hide their values for ~1.5s after
-    // a mode change so the user doesn't see stale numbers.
+    // momentarily mismatched. Values stay muted until the cook_temp
+    // range/unit changes, the new mode is reported, or the timeout hits.
     this._modeTransitionUntil = 0;     // unix ms; values muted while now < this
+    this._modeTransitionSig = "";
+    this._modeTransitionTarget = null;
+  }
+
+  static getStubConfig() {
+    return {};
   }
 
   setConfig(config) {
-    if (!config || !config.dsn) {
-      throw new Error("dsn is required (your grill's lowercase DSN)");
-    }
+    if (!config) throw new Error("Invalid configuration");
     // DSN is kept as-typed; entity-resolution is case-insensitive.
-    this._config = { ...config, dsn: String(config.dsn) };
+    this._config = { ...config, dsn: config.dsn ? String(config.dsn) : "" };
     this._built = false;
     this._entityCache = new Map();
+    this._entityRegistry = null;
     this._render();
   }
 
@@ -184,6 +200,8 @@ class WoodfireGrillCard extends HTMLElement {
   disconnectedCallback() {
     if (this._tickTimer) clearInterval(this._tickTimer);
     if (this._renderTimer) clearTimeout(this._renderTimer);
+    this._tickTimer = null;
+    this._renderTimer = null;
   }
 
   _scheduleRender() {
@@ -198,69 +216,53 @@ class WoodfireGrillCard extends HTMLElement {
     return 8;
   }
 
-  _findEntity(domain, key) {
-    if (!this._hass) return null;
-    const dsn = this._config.dsn;
-    const dsnLow = dsn.toLowerCase();
-    const wantUid = `${dsnLow}_${key}`;
-
-    if (!this._entityCache) this._entityCache = new Map();
-    const cacheKey = `${domain}.${key}`;
-    const cached = this._entityCache.get(cacheKey);
-    if (cached && this._hass.states[cached]) return cached;
-
-    // Strategy 1 — entity registry, by unique_id. Some HA versions expose
-    // `unique_id` on `hass.entities`, some don't (lightweight
-    // EntityRegistryDisplayEntry). When it's missing we fall through.
-    if (this._hass.entities) {
-      for (const [eid, ent] of Object.entries(this._hass.entities)) {
-        if (!eid.startsWith(domain + ".")) continue;
-        const uid = ent && ent.unique_id;
-        if (uid && uid.toLowerCase() === wantUid) {
-          this._entityCache.set(cacheKey, eid);
-          return eid;
-        }
+  // Device registry id of the configured grill. With a dsn, only a
+  // device carrying that identifier / serial number matches; without
+  // one, the first ninja_woodfire device is used.
+  _deviceId() {
+    const devices = this._hass.devices;
+    if (!devices) return null;
+    const dsnLow = this._config.dsn.toLowerCase();
+    for (const [id, dev] of Object.entries(devices)) {
+      const ids = (dev && dev.identifiers) || [];
+      const ours = ids.filter(i => i && i[0] === INTEGRATION_PLATFORM);
+      if (!ours.length) continue;
+      if (!dsnLow) return id;
+      if (ours.some(i => String(i[1]).toLowerCase() === dsnLow)
+          || String(dev.serial_number || "").toLowerCase() === dsnLow) {
+        return id;
       }
     }
+    return null;
+  }
 
-    // Strategy 2 — entity registry, by platform + translation_key. This
-    // works on the lightweight registry too because both fields are
-    // always present on registered entities.
-    if (this._hass.entities) {
-      const candidates = [];
-      for (const [eid, ent] of Object.entries(this._hass.entities)) {
+  _findEntity(domain, key) {
+    const hass = this._hass;
+    if (!hass || !hass.entities) return null;
+    if (this._entityRegistry !== hass.entities
+        || this._deviceRegistry !== hass.devices) {
+      this._entityRegistry = hass.entities;
+      this._deviceRegistry = hass.devices;
+      this._entityCache = new Map();
+      this._deviceIdCached = this._deviceId();
+    }
+    const cacheKey = `${domain}.${key}`;
+    if (this._entityCache.has(cacheKey)) return this._entityCache.get(cacheKey);
+
+    const deviceId = this._deviceIdCached;
+    let pick = null;
+    if (deviceId || !this._config.dsn) {
+      for (const [eid, ent] of Object.entries(hass.entities)) {
         if (!eid.startsWith(domain + ".")) continue;
         if (!ent || ent.platform !== INTEGRATION_PLATFORM) continue;
         if (ent.translation_key !== key) continue;
-        candidates.push(eid);
-      }
-      // If multiple grills are set up: prefer the one whose entity_id
-      // contains the dsn slug; otherwise fall back to the first match
-      // (works for the single-grill case which is the overwhelming norm).
-      const dsnMatch = candidates.find(eid => eid.includes(dsnLow));
-      const pick = dsnMatch || candidates[0];
-      if (pick) {
-        this._entityCache.set(cacheKey, pick);
-        return pick;
+        if (deviceId && ent.device_id !== deviceId) continue;
+        pick = eid;
+        break;
       }
     }
-
-    // Strategy 3 — last-resort suffix scan over hass.states. Slow but
-    // covers ancient HA where `hass.entities` isn't populated.
-    let dsnHit = null;
-    let firstHit = null;
-    for (const eid of Object.keys(this._hass.states)) {
-      if (!eid.startsWith(domain + ".")) continue;
-      if (!eid.endsWith(`_${key}`)) continue;
-      if (eid.includes(dsnLow)) { dsnHit = eid; break; }
-      if (!firstHit) firstHit = eid;
-    }
-    const pick = dsnHit || firstHit;
-    if (pick) {
-      this._entityCache.set(cacheKey, pick);
-      return pick;
-    }
-    return null;
+    this._entityCache.set(cacheKey, pick);
+    return pick;
   }
 
   _eid(domain, key) {
@@ -317,18 +319,29 @@ class WoodfireGrillCard extends HTMLElement {
   _call(domain, service, data) {
     if (!this._hass) return;
     // Service calls go through the websocket. During a transient disconnect
-    // the call rejects with a numeric error code (e.g. `3`) which surfaces
-    // as an unhandled-promise warning in DevTools. Swallow & log instead.
+    // the call rejects with a numeric error code (e.g. `3`). Surface the
+    // failure as an HA toast and release any pending/muted UI state.
     try {
       const p = this._hass.callService(domain, service, data);
       if (p && typeof p.catch === "function") {
-        p.catch(err => console.warn(
-          `[woodfire-grill-card] ${domain}.${service} failed:`, err, data,
-        ));
+        p.catch(err => this._callFailed(domain, service, err));
       }
     } catch (err) {
-      console.warn(`[woodfire-grill-card] ${domain}.${service} threw:`, err);
+      this._callFailed(domain, service, err);
     }
+  }
+
+  _callFailed(domain, service, err) {
+    const reason = (err && (err.message || err.code)) || String(err);
+    this.dispatchEvent(new CustomEvent("hass-notification", {
+      detail: { message: `Woodfire: ${domain}.${service} fehlgeschlagen (${reason})` },
+      bubbles: true,
+      composed: true,
+    }));
+    this._pendingAction = null;
+    this._pendingFromState = null;
+    this._modeTransitionUntil = 0;
+    this._render();
   }
 
   _press(key) {
@@ -358,10 +371,10 @@ class WoodfireGrillCard extends HTMLElement {
     });
   }
 
-  _toggleSwitch(key) {
+  _setSwitch(key, on) {
     const eid = this._findEntity("switch", key);
     if (!eid) return;
-    this._call("switch", "toggle", {
+    this._call("switch", on ? "turn_on" : "turn_off", {
       entity_id: eid,
     });
   }
@@ -422,10 +435,7 @@ class WoodfireGrillCard extends HTMLElement {
     // own logic. While the grill is idle / off / unknown, the cloud
     // keeps returning whatever value was last seen — mute anything
     // above ambient so the dashboard doesn't lie.
-    const _grillIdle = !["preheat", "preheating", "heat", "cooking", "cook",
-                         "rest", "resting", "flip", "flip_food",
-                         "get_food", "get food", "insert_food", "insert food"]
-                       .includes(String(grillState));
+    const _grillIdle = !ACTIVE_STATES.has(String(grillState));
     if (_grillIdle) {
       if (grillTemp != null && grillTemp > 50) grillTemp = null;
       if (airTemp != null && airTemp > 50) airTemp = null;
@@ -507,7 +517,7 @@ class WoodfireGrillCard extends HTMLElement {
       if (!integrationLoaded) {
         sub = "Integration nicht geladen";
       } else if (!cloudReachable) {
-        sub = "Verbindung verloren — auf Power on tippen wenn online";
+        sub = "Keine Verbindung zum Grill";
       } else if (isOff) {
         sub = "Grill ist aus — auf Power on tippen zum Aufwecken";
       } else {
@@ -611,6 +621,11 @@ class WoodfireGrillCard extends HTMLElement {
     const stopBtn = this.shadowRoot.querySelector("#btn-stop");
 
     const showAsPower = isOff || !cloudReachable || !integrationLoaded;
+    // Power-on fires stop_cook; without a reachable grill / button
+    // entity it can't do anything, so show "Keine Verbindung" instead.
+    const stopEntityState = this._rawState("button", "stop_cook");
+    const noConnection = !cloudReachable || stopEntityState == null
+                         || stopEntityState === "unavailable";
     const pending = this._pendingAction;
     // Map button → label/icon to swap in while it's the pending one.
     const PENDING_LABEL = { start: "Startet…", power: "Aufwecken…",
@@ -619,9 +634,9 @@ class WoodfireGrillCard extends HTMLElement {
     if (startBtn && startIcon && startLabel) {
       if (showAsPower) {
         startBtn.classList.add("is-power");
-        startIcon.setAttribute("icon", "mdi:power");
-        startLabel.textContent = "Power on";
-        startBtn.toggleAttribute("disabled", !integrationLoaded);
+        startIcon.setAttribute("icon", noConnection ? "mdi:cloud-off-outline" : "mdi:power");
+        startLabel.textContent = noConnection ? "Keine Verbindung" : "Power on";
+        startBtn.toggleAttribute("disabled", noConnection);
       } else {
         startBtn.classList.remove("is-power");
         startIcon.setAttribute("icon", "mdi:play");
@@ -731,10 +746,15 @@ class WoodfireGrillCard extends HTMLElement {
     const active = this._bool("binary_sensor", `probe${k}_active`);
     const pct = Math.max(0, Math.min(100, progress));
     const color = pct >= 100 ? "#4caf50" : pct >= 80 ? "#ff9800" : "#e74c3c";
-    block.querySelector(".probe-name").innerHTML =
-      `Sonde ${uiIdx}${active ? ' <span class="dot"></span>' : ""}`;
-    block.querySelector(".probe-stats").innerHTML =
-      `${temp != null ? Math.round(temp * 10) / 10 + "°C" : "—"}${target ? ` → <strong>${target}°C</strong>` : ""} (${Math.round(pct)}%)`;
+    const setText = (sel, text) => {
+      const el = block.querySelector(sel);
+      if (el.textContent !== text) el.textContent = text;
+    };
+    block.querySelector(".dot").style.display = active ? "" : "none";
+    setText(".probe-temp", temp != null ? `${Math.round(temp * 10) / 10}°C` : "—");
+    block.querySelector(".probe-target-wrap").hidden = !target;
+    setText(".probe-target", target ? `${target}°C` : "");
+    setText(".probe-pct", `(${Math.round(pct)}%)`);
     const fill = block.querySelector(".probe-fill");
     fill.style.width = `${pct}%`;
     fill.style.background = color;
@@ -750,11 +770,16 @@ class WoodfireGrillCard extends HTMLElement {
   }
 
   // Patches inputs/switches in the cook-config panel from current HA state.
-  // Skips elements that the user is actively interacting with (focused or
-  // marked dirty) so we don't yank their slider mid-drag.
+  // Skips elements marked dirty so we don't yank their slider mid-drag.
   _refreshControlValues() {
     const root = this.shadowRoot;
     if (!root) return;
+
+    if (Date.now() < this._modeTransitionUntil &&
+        (this._cookTempSig() !== this._modeTransitionSig ||
+         this._state("select", "cook_mode") === this._modeTransitionTarget)) {
+      this._modeTransitionUntil = 0;
+    }
 
     // Sub-renderers handle their own variant-switching and value patching.
     this._renderModeOptions();
@@ -806,13 +831,17 @@ class WoodfireGrillCard extends HTMLElement {
       const el = root.querySelector(sel);
       if (!el) return;
       if (el.dataset.dirty === "1") return;
-      if (root.activeElement === el) return;
       if (el.value !== String(value)) el.value = value;
     };
     const p1 = this._num("number", "probe0_target_temp");
     const p2 = this._num("number", "probe1_target_temp");
     if (p1 != null) setIfClean("#ctl-probe1temp", p1);
     if (p2 != null) setIfClean("#ctl-probe2temp", p2);
+  }
+
+  _cookTempSig() {
+    const a = this._hassState("number", "cook_temp")?.attributes || {};
+    return `${a.min}|${a.max}|${a.unit_of_measurement}`;
   }
 
   _setText(id, text) {
@@ -858,15 +887,10 @@ class WoodfireGrillCard extends HTMLElement {
     const STOP_LIKE = new Set([
       "idle", "done", "powered OFF", "powered_off", "off",
     ]);
-    const ACTIVE_LIKE = new Set([
-      "preheat", "preheating", "heat", "cooking", "cook",
-      "rest", "resting", "flip", "flip_food",
-      "get food", "get_food", "insert food", "insert_food",
-    ]);
     const targetReached = (() => {
       switch (this._pendingAction) {
         case "start":
-          return ACTIVE_LIKE.has(currentState);
+          return ACTIVE_STATES.has(currentState);
         case "stop":
           return STOP_LIKE.has(currentState);
         case "skip":
@@ -942,16 +966,16 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-1" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">Sonde 1</div>
-            <div class="probe-stats"></div>
+            <div class="probe-name">Sonde 1<span class="dot" style="display:none"></span></div>
+            <div class="probe-stats"><span class="probe-temp">—</span><span class="probe-target-wrap" hidden> → <strong class="probe-target"></strong></span> <span class="probe-pct"></span></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
         </div>
         <div id="probe-2" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">Sonde 2</div>
-            <div class="probe-stats"></div>
+            <div class="probe-name">Sonde 2<span class="dot" style="display:none"></span></div>
+            <div class="probe-stats"><span class="probe-temp">—</span><span class="probe-target-wrap" hidden> → <strong class="probe-target"></strong></span> <span class="probe-pct"></span></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
         </div>
@@ -1024,6 +1048,7 @@ class WoodfireGrillCard extends HTMLElement {
       $("#ctl-dur-badge").textContent = `${e.target.value}m`;
     });
     durInput.addEventListener("change", e => {
+      e.target.blur();
       this._setNumber("cook_duration", e.target.value);
       setTimeout(() => clearDirty(e.target), 2000);
     });
@@ -1031,25 +1056,23 @@ class WoodfireGrillCard extends HTMLElement {
     const modeSel = $("#ctl-mode");
     modeSel.addEventListener("change", e => {
       markDirty(e.target);
+      e.target.blur();
       // Mode change snaps temp + duration ranges on the integration
-      // side, but the new values land via HA only on the next state
-      // refresh. Mute the dependent controls for ~1.5s so the user
-      // doesn't see stale numbers between mode change and refresh.
-      this._modeTransitionUntil = Date.now() + 1500;
+      // side. Mute the dependent controls until the new cook_temp
+      // range/unit (or the new mode) arrives, bounded by a timeout.
+      this._modeTransitionUntil = Date.now() + MODE_TRANSITION_TIMEOUT_MS;
+      this._modeTransitionSig = this._cookTempSig();
+      this._modeTransitionTarget = e.target.value;
       this._setSelect("cook_mode", e.target.value);
       setTimeout(() => clearDirty(e.target), 2000);
-      // Render now to mute, and again after the transition window
-      // ends so the controls re-enable without waiting for the
-      // 1-second tick.
       this._scheduleRender();
-      setTimeout(() => this._render(), 1600);
     });
 
     const wireSwitch = (sel, key) => {
       const el = $(sel);
       el.addEventListener("change", () => {
         markDirty(el);
-        this._toggleSwitch(key);
+        this._setSwitch(key, el.checked);
         setTimeout(() => clearDirty(el), 2000);
       });
     };
@@ -1147,16 +1170,19 @@ class WoodfireGrillCard extends HTMLElement {
           <div id="ctl-heat" class="seg-group">
             <button type="button" class="seg" data-val="1">Lo</button>
             <button type="button" class="seg" data-val="2">Med</button>
-            <button type="button" class="seg" data-val="3">High</button>
+            <button type="button" class="seg" data-val="3">Hi</button>
           </div>
         `;
+        const group = slot.querySelector("#ctl-heat");
         slot.querySelectorAll("button.seg").forEach(btn => {
           btn.addEventListener("click", () => {
             if (btn.hasAttribute("disabled")) return;
             const v = parseInt(btn.dataset.val, 10);
             slot.querySelectorAll("button.seg").forEach(b =>
               b.classList.toggle("active", b === btn));
+            group.dataset.dirty = "1";
             this._setNumber("cook_temp", v);
+            setTimeout(() => delete group.dataset.dirty, 2000);
           });
         });
       } else {
@@ -1173,6 +1199,7 @@ class WoodfireGrillCard extends HTMLElement {
           badge.textContent = `${e.target.value}${tempUnit}`;
         });
         tempInput.addEventListener("change", e => {
+          e.target.blur();
           this._setNumber("cook_temp", e.target.value);
           setTimeout(() => delete e.target.dataset.dirty, 2000);
         });
@@ -1187,9 +1214,16 @@ class WoodfireGrillCard extends HTMLElement {
 
     // Patch values inside the active variant.
     if (isHeatLevel) {
+      // cook_temp holds the level 1..3; fall back to the setpoint
+      // sensor's "Lo"/"Med"/"Hi" if the number reports anything else.
+      const level = Number.isInteger(tempVal) && tempVal >= 1 && tempVal <= 3
+        ? tempVal
+        : SETPOINT_LEVELS[String(this._state("sensor", "setpoint") ?? "").toLowerCase()];
+      const group = slot.querySelector("#ctl-heat");
+      const dirty = group && group.dataset.dirty === "1";
       slot.querySelectorAll("button.seg").forEach(btn => {
         const v = parseInt(btn.dataset.val, 10);
-        btn.classList.toggle("active", !inModeTransition && v === tempVal);
+        if (!dirty) btn.classList.toggle("active", !inModeTransition && v === level);
         if (inModeTransition || v < tempMin || v > tempMax) {
           btn.setAttribute("disabled", "");
         } else {
@@ -1207,9 +1241,7 @@ class WoodfireGrillCard extends HTMLElement {
           if (badge) badge.textContent = "…";
         } else {
           tempInput.removeAttribute("disabled");
-          if (tempInput.dataset.dirty !== "1" &&
-              this.shadowRoot.activeElement !== tempInput &&
-              !isNaN(tempVal)) {
+          if (tempInput.dataset.dirty !== "1" && !isNaN(tempVal)) {
             if (tempInput.value !== String(tempVal)) tempInput.value = tempVal;
             if (badge) badge.textContent = `${tempVal}${tempUnit}`;
           }
@@ -1236,9 +1268,7 @@ class WoodfireGrillCard extends HTMLElement {
         .join("");
     }
 
-    if (sel.dataset.dirty !== "1" &&
-        this.shadowRoot.activeElement !== sel &&
-        current && sel.value !== current) {
+    if (sel.dataset.dirty !== "1" && current && sel.value !== current) {
       sel.value = current;
     }
   }
@@ -1261,9 +1291,7 @@ class WoodfireGrillCard extends HTMLElement {
     }
     inp.removeAttribute("disabled");
     const v = e ? parseFloat(e.state) : null;
-    if (v != null && !isNaN(v) &&
-        inp.dataset.dirty !== "1" &&
-        this.shadowRoot.activeElement !== inp) {
+    if (v != null && !isNaN(v) && inp.dataset.dirty !== "1") {
       if (inp.value !== String(v)) inp.value = v;
       if (badge && badge.textContent !== `${v}m`) badge.textContent = `${v}m`;
     }
@@ -1481,12 +1509,14 @@ class WoodfireGrillCard extends HTMLElement {
   }
 }
 
-customElements.define("woodfire-grill-card", WoodfireGrillCard);
+if (!customElements.get("woodfire-grill-card")) {
+  customElements.define("woodfire-grill-card", WoodfireGrillCard);
 
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "woodfire-grill-card",
-  name: "Ninja Woodfire Grill",
-  description: "Compact Ninja Woodfire dashboard with live timer and one-tap controls.",
-  preview: false,
-});
+  window.customCards = window.customCards || [];
+  window.customCards.push({
+    type: "woodfire-grill-card",
+    name: "Ninja Woodfire Grill",
+    description: "Compact Ninja Woodfire dashboard with live timer and one-tap controls.",
+    preview: false,
+  });
+}

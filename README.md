@@ -32,15 +32,20 @@ live state, temperatures, probes, and one-tap controls on a single tile.
 1. Open HACS → Frontend → ⋮ → *Custom repositories*
 2. Add this repository, category *Lovelace*
 3. Install *Ninja Woodfire Grill Card*
-4. Reload Lovelace resources or hard-refresh your browser
+4. HACS 2.x usually registers the resource automatically. If not, add
+   it under *Settings → Dashboards → ⋮ → Resources*:
+   ```yaml
+   url: /hacsfiles/ninja-woodfire-card/woodfire-grill-card.js
+   type: module
+   ```
+5. Hard-refresh your browser
 
 ### Manual
 
-1. Copy `dist/woodfire-grill-card.js` to
-   `/config/www/community/woodfire-grill-card/woodfire-grill-card.js`
+1. Copy `dist/woodfire-grill-card.js` to `/config/www/woodfire-grill-card.js`
 2. Add a Lovelace resource:
    ```yaml
-   url: /hacsfiles/woodfire-grill-card/woodfire-grill-card.js
+   url: /local/woodfire-grill-card.js
    type: module
    ```
 3. Hard-refresh the dashboard.
@@ -49,12 +54,12 @@ live state, temperatures, probes, and one-tap controls on a single tile.
 
 ```yaml
 type: custom:woodfire-grill-card
-dsn: ac000w036025444   # your grill's DSN
+dsn: AC000W0XXXXXXXX   # optional, only needed with multiple grills
 ```
 
 | Option | Required | Description |
 |--------|----------|-------------|
-| `dsn`  | yes      | The grill's DSN (case-insensitive). Find it under *Settings → Devices → Ninja Woodfire*. |
+| `dsn`  | no       | The grill's DSN (case-insensitive), shown as serial number under *Settings → Devices → Ninja Woodfire*. Without it the card uses the first Ninja Woodfire device. |
 
 ## Status & support
 
