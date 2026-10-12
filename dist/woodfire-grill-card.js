@@ -9,7 +9,7 @@
  *   dsn: <your grill's DSN>   (optional with a single grill)
  */
 
-const VERSION = "0.17.0";
+const VERSION = "0.17.1";
 const INTEGRATION_PLATFORM = "ninja_woodfire";
 console.info(
   `%c WOODFIRE-GRILL-CARD %c ${VERSION} `,
@@ -69,6 +69,7 @@ const TRANSLATIONS = {
       error: "Error",
       "lid open": "Lid open",
       lid_open: "Lid open",
+      "wait lid closed before cook": "Close the lid",
       unknown: "Unknown",
       unavailable: "Unavailable",
       "powered OFF": "Off",
@@ -84,6 +85,9 @@ const TRANSLATIONS = {
       "insert food": "Add food",
       get_food: "Remove food",
       "get food": "Remove food",
+      addfood: "Add food \u2014 open and close the lid to confirm",
+      flipfood: "Time to flip",
+      getfood: "Remove food",
       halftime: "Halfway",
     },
     mode: {
@@ -150,6 +154,7 @@ const TRANSLATIONS = {
       error: "Fehler",
       "lid open": "Deckel offen",
       lid_open: "Deckel offen",
+      "wait lid closed before cook": "Deckel schlie\u00dfen",
       unknown: "Unbekannt",
       unavailable: "Nicht verf\u00fcgbar",
       "powered OFF": "Aus",
@@ -163,6 +168,9 @@ const TRANSLATIONS = {
       "insert food": "Essen einlegen",
       get_food: "Essen entnehmen",
       "get food": "Essen entnehmen",
+      addfood: "Essen einlegen \u2013 Deckel \u00f6ffnen und schlie\u00dfen zum Best\u00e4tigen",
+      flipfood: "Bitte wenden",
+      getfood: "Essen entnehmen",
       halftime: "Halbzeit",
     },
     mode: {
@@ -274,6 +282,10 @@ const ACTIVE_STATES = new Set([
 ]);
 
 const SETPOINT_LEVELS = { lo: 1, med: 2, hi: 3, high: 3 };
+
+const PREHEAT_LIKE = new Set(["preheat", "preheating", "start", "ignition"]);
+
+const WAITING_STATES = new Set(["wait lid closed before cook"]);
 
 const MODE_TRANSITION_TIMEOUT_MS = 5000;
 
@@ -617,7 +629,7 @@ class WoodfireGrillCard extends HTMLElement {
     const totalSeconds = (this._num("number", "cook_duration") ?? 0) * 60;
 
     const isActive = grillState !== "idle" && grillState !== "unknown" &&
-                     grillState !== "unavailable" &&
+                     grillState !== "unavailable" && !WAITING_STATES.has(grillState) &&
                      grillState !== "powered OFF" && grillState !== "powered_off";
     const isOff = grillState === "powered OFF" || grillState === "powered_off";
 
@@ -628,7 +640,15 @@ class WoodfireGrillCard extends HTMLElement {
     // Prefer cook_state during an active cook because it tells the
     // sub-phase (preheat / heat / cooking / rest / get_food / flip_food).
     // grill_state often just stays "cooking" for the whole session.
-    const phaseState = isActive && cookState && cookState !== "none"
+    // The integration knows when preheat really ended: the firmware keeps
+    // cook_state at "preheat" until "add food" is acknowledged on the grill.
+    const phase = this._attr("sensor", "cook_progress", "phase");
+    const inPreheat = phase != null
+      ? phase === "preheat"
+      : PREHEAT_LIKE.has(grillState) || PREHEAT_LIKE.has(cookState);
+    const prompt = this._state("sensor", "prompt");
+    const staleCookState = PREHEAT_LIKE.has(cookState) && !inPreheat;
+    const phaseState = isActive && cookState && cookState !== "none" && !staleCookState
       ? cookState
       : grillState;
     const stateLabel = this._L.state[phaseState] || phaseState;
@@ -642,11 +662,6 @@ class WoodfireGrillCard extends HTMLElement {
     this._setText("header-state", stateLabel);
     this._setStyle("header", "borderLeft", `4px solid ${stateColor}`);
 
-    const PREHEAT_LIKE = new Set([
-      "preheat", "preheating", "start", "ignition",
-    ]);
-    const inPreheat = PREHEAT_LIKE.has(grillState)
-                      || PREHEAT_LIKE.has(cookState);
 
     let sub = "";
     const cookModeLabel = this._L.mode[cookMode] || cookMode;
@@ -658,9 +673,13 @@ class WoodfireGrillCard extends HTMLElement {
       const isLevel = typeof setpointDisplay === "string" &&
                       isNaN(parseFloat(setpointDisplay));
       const level = isLevel && SETPOINT_LEVELS[setpointDisplay.toLowerCase()];
+      const rawLevel = cookMode === "grill" && [1, 2, 3].includes(Number(setpointDisplay))
+        ? Number(setpointDisplay) : null;
       sub += isLevel
         ? escapeHtml(level ? this._L.level[level] : setpointDisplay)
-        : `${setpointDisplay}${cookMode === "grill" ? "" : "°C"}`;
+        : rawLevel
+          ? escapeHtml(this._L.level[rawLevel])
+          : `${setpointDisplay}${cookMode === "grill" ? "" : "°C"}`;
     }
     // The cook timer counts down even during preheat (firmware
     // behaviour). Showing "endet in X" + "Y%" while the food isn't
@@ -694,7 +713,7 @@ class WoodfireGrillCard extends HTMLElement {
     this._setHTML("header-sub", sub);
 
     // ----- Advisory banner (flip / get food / insert food / halftime) -----
-    let advisoryText = this._L.advisory[cookState];
+    let advisoryText = (isActive && this._L.advisory[prompt]) || this._L.advisory[cookState];
     if (!advisoryText && isActive && totalSeconds > 0 && remaining != null
         && remaining > 0 && remaining <= totalSeconds / 2 && remaining > totalSeconds / 2 - 60) {
       advisoryText = this._L.advisory.halftime;
