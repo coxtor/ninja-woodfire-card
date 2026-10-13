@@ -1,8 +1,12 @@
-# Ninja Woodfire Grill Card
+<h1 align="center">Ninja Woodfire Grill Card</h1>
 
-<img src="assets/card-icon.png" width="200" alt="Ninja Woodfire Grill Card">
+<p align="center">
+  <img src="assets/card-icon.png" width="200" alt="Ninja Woodfire Grill Card">
+</p>
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+<p align="center">
+  <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-orange.svg" alt="hacs_badge"></a>
+</p>
 
 > **Hobby project — published as-is, no support, no warranty.**
 > See [Status & support](#status--support) and [Disclaimer](#disclaimer)
