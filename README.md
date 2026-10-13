@@ -1,5 +1,7 @@
 # Ninja Woodfire Grill Card
 
+<img src="assets/card-icon.png" width="200" alt="Ninja Woodfire Grill Card">
+
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
 > **Hobby project — published as-is, no support, no warranty.**
@@ -18,6 +20,8 @@ live state, temperatures, probes, and one-tap controls on a single tile.
   Celsius slider for everything else)
 - Cook-mode dropdown, duration slider, smoke / skip-preheat toggles
 - Start / Stop / Skip-Preheat actions
+- Works with both the cloud and the local **Bluetooth** transport; a small
+  diagnostics footer shows the active connection, firmware, serial and signal
 - Follows the Home Assistant user's language (English and German; anything
   else falls back to English)
 
@@ -101,9 +105,25 @@ support, no warranty, no guarantee of fitness for any purpose**.
 Issues and pull requests may be ignored. The author has no
 obligation to respond, fix bugs, or keep the project working.
 
+## Credits & attribution
+
+- The card is a dependency-free vanilla Web Component — it bundles **no
+  third-party runtime libraries**. Only the browser and Home Assistant's
+  `ha-icon` (Material Design Icons) are used at runtime.
+- Companion to the
+  [Ninja Woodfire integration](https://github.com/coxtor/ninja-woodfire-integration);
+  the local-Bluetooth support builds on independent reverse-engineering of the
+  grill's BLE protocol.
+- Thanks to **@SchubmannM** for contributions to the integration (AWS backend,
+  i18n groundwork).
+- Icon generated for this project; the appliance likeness references the
+  SharkNinja Ninja Woodfire Pro Connect XL (used descriptively only — see the
+  Disclaimer).
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). The bundled Material Design Icons used via
+`ha-icon` are provided by Home Assistant under their own licenses.
 
 ## Disclaimer
 

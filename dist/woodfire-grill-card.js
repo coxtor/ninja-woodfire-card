@@ -9,7 +9,7 @@
  *   dsn: <your grill's DSN>   (optional with a single grill)
  */
 
-const VERSION = "0.17.1";
+const VERSION = "0.17.2";
 const INTEGRATION_PLATFORM = "ninja_woodfire";
 console.info(
   `%c WOODFIRE-GRILL-CARD %c ${VERSION} `,
@@ -88,7 +88,9 @@ const TRANSLATIONS = {
       addfood: "Add food \u2014 open and close the lid to confirm",
       flipfood: "Time to flip",
       getfood: "Remove food",
+      done: "Cooking complete",
       halftime: "Halfway",
+      error: "Grill error",
     },
     mode: {
       grill: "Grill",
@@ -116,6 +118,7 @@ const TRANSLATIONS = {
     pending: { start: "Starting\u2026", power: "Waking\u2026", stop: "Stopping\u2026", skip: "Skipping\u2026" },
     button: { power: "Power on", noConnection: "No connection", start: "Start", stop: "Stop", skip: "Skip preheat" },
     temp: { grill: "Grill", air: "Air", smoke: "Smoke", lid: "Lid" },
+    diag: { backend: "Connection", local: "Local (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Serial", signal: "Signal" },
     lid: { open: "open", closed: "closed" },
     probe: { name: "Probe {n}", target: "Probe {n} target" },
     control: {
@@ -171,7 +174,9 @@ const TRANSLATIONS = {
       addfood: "Essen einlegen \u2013 Deckel \u00f6ffnen und schlie\u00dfen zum Best\u00e4tigen",
       flipfood: "Bitte wenden",
       getfood: "Essen entnehmen",
+      done: "Garvorgang abgeschlossen",
       halftime: "Halbzeit",
+      error: "Grill-Fehler",
     },
     mode: {
       grill: "Grillen",
@@ -199,6 +204,7 @@ const TRANSLATIONS = {
     pending: { start: "Startet\u2026", power: "Aufwecken\u2026", stop: "Stoppt\u2026", skip: "\u00dcberspringe\u2026" },
     button: { power: "Einschalten", noConnection: "Keine Verbindung", start: "Start", stop: "Stopp", skip: "Vorheizen \u00fcberspringen" },
     temp: { grill: "Grill", air: "Luft", smoke: "Rauch", lid: "Deckel" },
+    diag: { backend: "Verbindung", local: "Lokal (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Seriennr.", signal: "Signal" },
     lid: { open: "offen", closed: "zu" },
     probe: { name: "Sonde {n}", target: "Sonde {n} Ziel" },
     control: {
@@ -623,7 +629,11 @@ class WoodfireGrillCard extends HTMLElement {
     const endIso = this._state("sensor", "end_time");
     const endTimeSec = endIso ? new Date(endIso).getTime() / 1000 : null;
     const nowSec = Date.now() / 1000;
-    const remaining = endTimeSec ? endTimeSec - nowSec : null;
+    // Fall back to the seconds_left sensor when the firmware's end timestamp
+    // is absent (e.g. the local BLE transport), so the countdown and progress
+    // bar still work instead of vanishing.
+    const remaining = endTimeSec ? endTimeSec - nowSec
+      : (this._num("sensor", "seconds_left") ?? null);
 
     const cookProgressFromSensor = this._num("sensor", "cook_progress");
     const totalSeconds = (this._num("number", "cook_duration") ?? 0) * 60;
@@ -718,6 +728,9 @@ class WoodfireGrillCard extends HTMLElement {
         && remaining > 0 && remaining <= totalSeconds / 2 && remaining > totalSeconds / 2 - 60) {
       advisoryText = this._L.advisory.halftime;
     }
+    // Firmware error takes precedence in the advisory banner.
+    const errCode = this._num("sensor", "error_code");
+    if (errCode) advisoryText = `${this._L.advisory.error} (${errCode})`;
     const advisoryEl = this.shadowRoot.querySelector("#advisory");
     if (advisoryEl) {
       if (advisoryText) {
@@ -727,6 +740,9 @@ class WoodfireGrillCard extends HTMLElement {
         advisoryEl.style.display = "none";
       }
     }
+
+    // ----- Diagnostics footer (transport / firmware / serial / signal) -----
+    this._renderDiag();
 
     // ----- Progress bar -----
     // During preheat the cook timer is silently counting down (firmware
@@ -1036,6 +1052,33 @@ class WoodfireGrillCard extends HTMLElement {
     if (el && el.textContent !== text) el.textContent = text;
   }
 
+  _renderDiag() {
+    const D = this._L.diag;
+    const backend = this._state("sensor", "cloud_backend");
+    const parts = [];
+    if (backend) {
+      const name = backend === "ble" ? D.local : `${D.cloud} (${backend.toUpperCase()})`;
+      parts.push([D.backend, name]);
+    }
+    const fw = this._state("sensor", "firmware_version");
+    if (fw) parts.push([D.firmware, fw]);
+    const dsn = this._state("sensor", "dsn");
+    if (dsn) parts.push([D.dsn, dsn]);
+    const rssi = this._num("sensor", "wifi_signal");
+    if (rssi != null) parts.push([D.signal, `${rssi} dBm`]);
+    const msg = this._state("sensor", "message");
+    if (msg) parts.push(["", msg]);
+    const el = this.shadowRoot.querySelector("#diag");
+    if (!el) return;
+    if (!parts.length) { el.style.display = "none"; return; }
+    el.innerHTML = parts
+      .map(([k, v]) => k
+        ? `<span><span class="diag-k">${escapeHtml(k)}:</span> ${escapeHtml(String(v))}</span>`
+        : `<span>${escapeHtml(String(v))}</span>`)
+      .join("");
+    el.style.display = "flex";
+  }
+
   _setHTML(id, html) {
     const el = this.shadowRoot.querySelector(`#${id}`);
     if (el && el.innerHTML !== html) el.innerHTML = html;
@@ -1217,6 +1260,7 @@ class WoodfireGrillCard extends HTMLElement {
           <button id="btn-stop" class="btn btn-stop"><ha-icon icon="mdi:stop"></ha-icon> ${escapeHtml(L.button.stop)}</button>
           <button id="btn-skip" class="btn btn-skip"><ha-icon icon="mdi:fast-forward"></ha-icon> ${escapeHtml(L.button.skip)}</button>
         </div>
+        <div id="diag" class="diag" style="display:none"></div>
       </ha-card>
     `;
 
@@ -1581,6 +1625,14 @@ class WoodfireGrillCard extends HTMLElement {
       }
       .ctl-toggle.open .summary-arrow { transform: rotate(180deg); }
       .ctl-panel[hidden] { display: none; }
+      .diag {
+        margin-top: 10px; padding-top: 8px;
+        border-top: 1px solid var(--divider-color, rgba(255,255,255,0.1));
+        font-size: 0.72rem; line-height: 1.5;
+        color: var(--secondary-text-color, #9aa0a6);
+        display: flex; flex-wrap: wrap; gap: 4px 12px;
+      }
+      .diag .diag-k { opacity: 0.7; }
       .muted { opacity: 0.5; pointer-events: none; }
       /* Mode-incompatible controls: dim the row + label so the user
          sees *why* a switch is unresponsive (e.g. smoke in dehydrate). */
