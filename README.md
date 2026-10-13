@@ -25,6 +25,18 @@ live state, temperatures, probes, and one-tap controls on a single tile.
 - Follows the Home Assistant user's language (English and German; anything
   else falls back to English)
 
+## Local vs. cloud
+
+The integration can run fully **local over Bluetooth** (no cloud account, no
+internet) or over the SharkNinja cloud. This card works with both and shows the
+active connection in its diagnostics footer.
+
+> **One Bluetooth connection at a time.** A grill accepts only a single BLE
+> central. While Home Assistant holds the local BLE link, the **official Ninja
+> app cannot connect over Bluetooth at the same time**, and vice versa. Close
+> the app to let Home Assistant connect locally. (This limit is BLE-only; it
+> does not apply to the cloud path.)
+
 ## Requirements
 
 - Home Assistant with the
