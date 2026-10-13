@@ -9,7 +9,7 @@
  *   dsn: <your grill's DSN>   (optional with a single grill)
  */
 
-const VERSION = "0.17.2";
+const VERSION = "0.17.3";
 const INTEGRATION_PLATFORM = "ninja_woodfire";
 console.info(
   `%c WOODFIRE-GRILL-CARD %c ${VERSION} `,
@@ -398,17 +398,22 @@ class WoodfireGrillCard extends HTMLElement {
     const devices = this._hass.devices;
     if (!devices) return null;
     const dsnLow = this._config.dsn.toLowerCase();
+    const ninjaDevices = [];
     for (const [id, dev] of Object.entries(devices)) {
       const ids = (dev && dev.identifiers) || [];
       const ours = ids.filter(i => i && i[0] === INTEGRATION_PLATFORM);
       if (!ours.length) continue;
-      if (!dsnLow) return id;
-      if (ours.some(i => String(i[1]).toLowerCase() === dsnLow)
-          || String(dev.serial_number || "").toLowerCase() === dsnLow) {
+      ninjaDevices.push(id);
+      if (dsnLow && (ours.some(i => String(i[1]).toLowerCase() === dsnLow)
+          || String(dev.serial_number || "").toLowerCase() === dsnLow)) {
         return id;
       }
     }
-    return null;
+    // No dsn configured, or it matches no device (e.g. a local entry whose
+    // identifier is the Bluetooth address, not the old cloud DSN): fall back to
+    // the sole Ninja Woodfire device so the card still works.
+    if (!dsnLow) return ninjaDevices[0] || null;
+    return ninjaDevices.length === 1 ? ninjaDevices[0] : null;
   }
 
   _findEntity(domain, key) {

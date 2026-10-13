@@ -77,7 +77,7 @@ dsn: AC000W0XXXXXXXX   # optional, only needed with multiple grills
 
 | Option | Required | Description |
 |--------|----------|-------------|
-| `dsn`  | no       | The grill's DSN (case-insensitive), shown as serial number under *Settings → Devices → Ninja Woodfire*. Without it the card uses the first Ninja Woodfire device. |
+| `dsn`  | no       | The grill's DSN (case-insensitive), shown as serial number under *Settings → Devices → Ninja Woodfire*. Without it (or if it matches no device) the card uses your single Ninja Woodfire device automatically — including a local Bluetooth entry, whose identifier is the grill's Bluetooth address rather than a cloud DSN. |
 
 ## Languages
 
