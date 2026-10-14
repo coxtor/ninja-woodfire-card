@@ -8,9 +8,7 @@
   <a href="https://github.com/hacs/integration"><img src="https://img.shields.io/badge/HACS-Custom-orange.svg" alt="hacs_badge"></a>
 </p>
 
-> **Hobby project — published as-is, no support, no warranty.**
-> See [Status & support](#status--support) and [Disclaimer](#disclaimer)
-> below before installing.
+> **Hobby project.** See [Disclaimer](#disclaimer) below before installing.
 
 Compact Lovelace card for the Ninja Woodfire Home Assistant integration —
 live state, temperatures, probes, and one-tap controls on a single tile.
@@ -114,12 +112,9 @@ node test/i18n.test.mjs     # missing keys, typos, dropped {placeholders}
 open test/preview.html      # renders every language side by side, no HA needed
 ```
 
-## Status & support
+## Status
 
-This is a personal hobby project published as-is. There is **no
-support, no warranty, no guarantee of fitness for any purpose**.
-Issues and pull requests may be ignored. The author has no
-obligation to respond, fix bugs, or keep the project working.
+A personal hobby project, worked on as time and interest allow.
 
 ## Credits & attribution
 
