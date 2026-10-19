@@ -43,7 +43,10 @@ active connection in its diagnostics footer.
 
 - Home Assistant with the
   [Ninja Woodfire integration](https://github.com/coxtor/ninja-woodfire-integration)
-  installed and configured.
+  installed and configured, **version 1.5.0 or newer** — the card applies
+  multi-field changes (temperature + duration, probe enable + target, etc.)
+  through the integration's `ninja_woodfire.configure_cook` service for a
+  single atomic update instead of several separate calls.
 
 ## Installation
 

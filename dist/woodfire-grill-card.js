@@ -9,7 +9,7 @@
  *   dsn: <your grill's DSN>   (optional with a single grill)
  */
 
-const VERSION = "0.17.7";
+const VERSION = "0.18.0";
 const LOGO_URI = "data:image/png;base64,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";
 const STATE_IMG = (() => {
   const _i0 = "data:image/webp;base64,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";
@@ -77,6 +77,12 @@ const fmtTime = (sec) => {
   if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   return `${m}:${String(s).padStart(2, "0")}`;
 };
+
+/** Home Assistant may display the integration's celsius natives in °F. */
+const toCelsius = (value, unit) =>
+  value != null && unit && String(unit).toUpperCase().includes("F")
+    ? (value - 32) * 5 / 9
+    : value;
 
 // ---------------------------------------------------------------------------
 // Translations
@@ -152,7 +158,6 @@ const TRANSLATIONS = {
     },
     header: {
       cook: "Cook {min} min",
-      endsIn: "ends in {time}",
       notLoaded: "Integration not loaded",
       disconnected: "No connection to the grill",
       off: "Grill is asleep \u2014 tap Wake to bring it back",
@@ -160,13 +165,13 @@ const TRANSLATIONS = {
     },
     banner: {
       notLoaded: "Ninja Woodfire integration not loaded \u2014 check Settings \u2192 Devices & Services.",
-      unreachable: "Grill unreachable \u2014 cloud connection lost.",
+      unreachable: "Grill unreachable.",
       unreachableShort: "Grill unreachable",
     },
     pending: { start: "Starting\u2026", power: "Waking\u2026", stop: "Stopping\u2026", skip: "Skipping\u2026" },
     button: { power: "Wake", noConnection: "No connection", start: "Start", stop: "Stop", skip: "Skip preheat", apply: "Apply changes", cancel: "Cancel" },
     temp: { grill: "Grill", air: "Air", smoke: "Smoke", lid: "Lid" },
-    diag: { backend: "Connection", local: "Local (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Serial", signal: "Signal" },
+    diag: { backend: "Connection", local: "Local (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Serial", signal: "Signal", ble: "BLE", on: "on", off: "off" },
     lid: { open: "open", closed: "closed" },
     probe: { name: "Probe {n}", target: "Probe {n} target" },
     control: {
@@ -178,7 +183,10 @@ const TRANSLATIONS = {
       smoke: "Smoke (Woodfire)",
       skipPreheat: "Skip preheat",
     },
-    progress: { preheat: "Preheating", preheatPct: "Preheating {pct}%" },
+    progress: {
+      preheat: "Preheating", preheatPct: "Preheating {pct}%",
+      remainingOfTotal: "{remaining} left of {total}",
+    },
     level: { 1: "Lo", 2: "Med", 3: "Hi" },
     toast: { callFailed: "Woodfire: {service} failed ({reason})" },
   },
@@ -239,7 +247,6 @@ const TRANSLATIONS = {
     },
     header: {
       cook: "Garzeit {min} min",
-      endsIn: "endet in {time}",
       notLoaded: "Integration nicht geladen",
       disconnected: "Keine Verbindung zum Grill",
       off: "Grill schl\u00e4ft \u2014 auf Aufwecken tippen zum Zur\u00fcckholen",
@@ -247,13 +254,13 @@ const TRANSLATIONS = {
     },
     banner: {
       notLoaded: "Ninja-Woodfire-Integration nicht geladen \u2014 Einstellungen \u2192 Ger\u00e4te & Dienste pr\u00fcfen.",
-      unreachable: "Grill nicht erreichbar \u2014 Cloud-Verbindung verloren.",
+      unreachable: "Grill nicht erreichbar.",
       unreachableShort: "Grill nicht erreichbar",
     },
     pending: { start: "Startet\u2026", power: "Aufwecken\u2026", stop: "Stoppt\u2026", skip: "\u00dcberspringe\u2026" },
     button: { power: "Aufwecken", noConnection: "Keine Verbindung", start: "Start", stop: "Stopp", skip: "Vorheizen \u00fcberspringen", apply: "\u00dcbernehmen", cancel: "Abbrechen" },
     temp: { grill: "Grill", air: "Luft", smoke: "Rauch", lid: "Deckel" },
-    diag: { backend: "Verbindung", local: "Lokal (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Seriennr.", signal: "Signal" },
+    diag: { backend: "Verbindung", local: "Lokal (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Seriennr.", signal: "Signal", ble: "BLE", on: "an", off: "aus" },
     lid: { open: "offen", closed: "zu" },
     probe: { name: "Sonde {n}", target: "Sonde {n} Ziel" },
     control: {
@@ -265,7 +272,10 @@ const TRANSLATIONS = {
       smoke: "Rauch (Woodfire)",
       skipPreheat: "Vorheizen \u00fcberspringen",
     },
-    progress: { preheat: "Vorheizen", preheatPct: "Vorheizen {pct}%" },
+    progress: {
+      preheat: "Vorheizen", preheatPct: "Vorheizen {pct}%",
+      remainingOfTotal: "{remaining} von {total}",
+    },
     level: { 1: "Niedrig", 2: "Mittel", 3: "Hoch" },
     toast: { callFailed: "Woodfire: {service} fehlgeschlagen ({reason})" },
   },
@@ -320,7 +330,7 @@ const ICON_FOR_STATE = {
   done: "mdi:check-circle",
   error: "mdi:alert-circle",
   unknown: "mdi:help-circle",
-  unavailable: "mdi:cloud-off-outline",
+  unavailable: "mdi:lan-disconnect",
   "powered OFF": "mdi:sleep",
   powered_off: "mdi:sleep",
   off: "mdi:sleep",
@@ -356,20 +366,61 @@ const COLOR_FOR_STATE = {
   off: "var(--disabled-color)",
 };
 
+// The firmware spells the same phase both ways ("get food" / "get_food") and
+// "off" has three spellings. Classification works on one normalised form so a
+// table can't disagree with itself.
+const normaliseState = (state) => {
+  const v = String(state ?? "").toLowerCase().replace(/_/g, " ").trim();
+  return v === "powered off" ? "off" : v;
+};
+
+// Mirrors the integration's ACTIVE_STATES: the grill is running a cook.
+// Everything else — idle, off, done, error, unknown, a state a future
+// firmware invents — is explicitly not a running cook.
 const ACTIVE_STATES = new Set([
   "preheat", "preheating", "start", "ignition",
   "heat", "cooking", "cook", "rest", "resting",
-  "flip", "flip_food", "get food", "get_food",
-  "insert food", "insert_food", "lid open", "lid_open",
+  "flip", "flip food", "get food", "insert food", "lid open",
 ]);
+
+// Active, but the cook timer is not running down.
+const PAUSED_STATES = new Set(["flip", "flip food", "get food", "insert food", "lid open"]);
+
+// Active, but the cook is over: the integration rejects any live change here.
+const REST_STATES = new Set(["rest", "resting"]);
+
+// Reached by stopping / finishing.
+const STOP_LIKE_STATES = new Set(["idle", "done", "off"]);
 
 const SETPOINT_LEVELS = { lo: 1, med: 2, hi: 3, high: 3 };
 
 const PREHEAT_LIKE = new Set(["preheat", "preheating", "start", "ignition"]);
 
-const WAITING_STATES = new Set(["wait lid closed before cook"]);
-
 const MODE_TRANSITION_TIMEOUT_MS = 5000;
+
+// Order a draft is sent in: the mode decides the ranges the other values are
+// validated against, and a probe has to be enabled before its target sticks.
+// Only used by the fallback path; the service applies a draft in one go.
+const APPLY_ORDER = [
+  "cook_mode", "cook_temp", "cook_duration", "cook_smoke", "cook_skip_preheat",
+  "probe0_enabled", "probe1_enabled", "probe0_target_temp", "probe1_target_temp",
+];
+
+// Entity key → field of the integration's `ninja_woodfire.configure_cook`
+// service, which applies a whole draft as one command instead of several
+// per-field writes that each re-issue the cook. Duration is in minutes, as
+// the cook_duration entity reports it.
+const CONFIGURE_FIELDS = {
+  cook_mode: "mode",
+  cook_temp: "temp",
+  cook_duration: "duration",
+  cook_smoke: "smoke",
+  cook_skip_preheat: "skip_preheat",
+  probe0_enabled: "probe_0_enabled",
+  probe0_target_temp: "probe_0_target",
+  probe1_enabled: "probe_1_enabled",
+  probe1_target_temp: "probe_1_target",
+};
 
 const escapeHtml = (s) => String(s ?? "")
   .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
@@ -412,6 +463,12 @@ class WoodfireGrillCard extends HTMLElement {
     // only sent on "Apply" (the action buttons morph to Apply/Cancel), so a live
     // cook isn't re-issued on every slider nudge. Immediate when idle.
     this._staged = {};                // entity key -> { apply(), value, isSwitch }
+    this._applying = false;           // an Apply is in flight (Apply is locked)
+    this._applyGeneration = 0;        // bumped by Stop to cancel a running apply
+    // Countdown bookkeeping while a cook is paused (lid open, flip food, …):
+    // the firmware's end timestamp keeps running, so the remaining time is
+    // held and the pause is subtracted once the cook continues.
+    this._pause = { key: null, held: null, offset: 0 };
     this._active = false;             // last-render "cook active" flag
     this._pendingAction = null;       // "start" | "stop" | "skip" | "power" | null
     this._pendingFromState = null;     // grill_state value at click time
@@ -485,8 +542,14 @@ class WoodfireGrillCard extends HTMLElement {
       const ours = ids.filter(i => i && i[0] === INTEGRATION_PLATFORM);
       if (!ours.length) continue;
       ninjaDevices.push(id);
+      // A grill can be addressed by its cloud DSN, its serial number, its
+      // Bluetooth address (local entries are identified by that) or its
+      // device-registry id.
+      const connections = (dev && dev.connections) || [];
       if (dsnLow && (ours.some(i => String(i[1]).toLowerCase() === dsnLow)
-          || String(dev.serial_number || "").toLowerCase() === dsnLow)) {
+          || String(dev.serial_number || "").toLowerCase() === dsnLow
+          || connections.some(c => c && String(c[1]).toLowerCase() === dsnLow)
+          || id.toLowerCase() === dsnLow)) {
         return id;
       }
     }
@@ -558,6 +621,72 @@ class WoodfireGrillCard extends HTMLElement {
     return isNaN(n) ? fallback : n;
   }
 
+  // A temperature sensor's value together with the unit Home Assistant
+  // displays it in — the integration reports celsius natively, but HA
+  // converts to the user's unit system.
+  _temp(key) {
+    const e = this._hassState("sensor", key);
+    const unit = e?.attributes?.unit_of_measurement || "°C";
+    if (!e || e.state === "unknown" || e.state === "unavailable") {
+      return { value: null, unit };
+    }
+    const n = parseFloat(e.state);
+    return { value: isNaN(n) ? null : n, unit };
+  }
+
+  // Where the countdown comes from: the firmware's end timestamp, or the
+  // seconds_left sensor when there is none (e.g. the local BLE transport).
+  // Both only change on a poll, so the seconds since then are counted off the
+  // reading. `key` identifies the reading — a new one re-anchors the timer.
+  // A seconds_left report without a timestamp can't be extrapolated: it has no
+  // key and is shown as reported.
+  _timerSource(endTimeSec, endIso) {
+    if (endTimeSec != null) {
+      const raw = () => endTimeSec - Date.now() / 1000;
+      return { key: `end:${endIso}`, raw, reported: raw };
+    }
+    const e = this._hassState("sensor", "seconds_left");
+    if (!e) return null;
+    const secs = parseFloat(e.state);
+    if (isNaN(secs)) return null;
+    const reported = () => secs;
+    const reportedAt = Date.parse(e.last_updated ?? e.last_changed ?? "");
+    if (isNaN(reportedAt)) return { key: null, raw: reported, reported };
+    return {
+      key: `secs:${reportedAt}:${secs}`,
+      raw: () => Math.max(0, secs - Math.max(0, (Date.now() - reportedAt) / 1000)),
+      reported,
+    };
+  }
+
+  // Remaining cook time. While the cook is paused the source keeps running, so
+  // the value reached at the start of the pause is held and the pause is
+  // subtracted afterwards. A new reading means the timer was re-anchored at
+  // the source, and a cook that is not running at all keeps no correction.
+  _remaining(endTimeSec, endIso, ticking, isActive) {
+    const p = this._pause;
+    const src = this._timerSource(endTimeSec, endIso);
+    if (!src || !isActive || src.key == null || p.key !== src.key) {
+      p.key = src ? src.key : null;
+      p.held = null;
+      p.offset = 0;
+    }
+    if (!src) return null;
+    // Nothing is counting down, so the reading stands as reported.
+    if (!isActive || src.key == null) return src.reported();
+    const raw = src.raw() + p.offset;
+    if (!ticking) {
+      if (p.held == null) p.held = raw;
+      return p.held;
+    }
+    if (p.held != null) {
+      p.offset += p.held - raw;
+      p.held = null;
+      return src.raw() + p.offset;
+    }
+    return raw;
+  }
+
   _bool(domain, key) {
     return this._state(domain, key) === "on";
   }
@@ -577,18 +706,46 @@ class WoodfireGrillCard extends HTMLElement {
     return this._hass.states[eid] || null;
   }
 
-  _call(domain, service, data) {
-    if (!this._hass) return;
-    // Service calls go through the websocket. During a transient disconnect
-    // the call rejects with a numeric error code (e.g. `3`). Surface the
-    // failure as an HA toast and release any pending/muted UI state.
+  // An entity exists and is not unavailable, i.e. a service call on it has a
+  // chance of doing something.
+  _entityUsable(domain, key) {
+    const state = this._rawState(domain, key);
+    return state != null && state !== "unavailable";
+  }
+
+  // Which button a Wake press should use, or null when waking is impossible.
+  // The integration's Wake is BLE-only (nudging a sleeping radio is
+  // meaningless over the cloud — a disconnected grill's Wi-Fi has to
+  // reconnect on its own) and stays available while the grill is asleep, so
+  // it must not be gated on the live grill state. Cloud backends keep the
+  // stop_cook nudge, which needs the cloud to still answer.
+  _wakeTarget() {
+    // The integration only sends the wake nudge while BLE is the active
+    // backend. A BLE sensor next to a running cloud backend (hybrid setup)
+    // would make the press a no-op, so it does not count as a wake path; only
+    // a backend sensor that says nothing at all leaves the sensor as the hint.
+    const backend = this._state("sensor", "cloud_backend");
+    const bleBackend = backend === "ble"
+      || (backend == null && this._rawState("binary_sensor", "ble_connected") != null);
+    if (bleBackend && this._entityUsable("button", "wake")) return "wake";
+    const grillState = this._rawState("sensor", "grill_state");
+    const reachable = grillState != null && grillState !== "unavailable";
+    if (reachable && this._entityUsable("button", "stop_cook")) return "stop_cook";
+    return null;
+  }
+
+  // Resolves true when the service call succeeded. Service calls go through
+  // the websocket. During a transient disconnect the call rejects with a
+  // numeric error code (e.g. `3`). Surface the failure as an HA toast and
+  // release any pending/muted UI state.
+  async _call(domain, service, data) {
+    if (!this._hass) return false;
     try {
-      const p = this._hass.callService(domain, service, data);
-      if (p && typeof p.catch === "function") {
-        p.catch(err => this._callFailed(domain, service, err));
-      }
+      await this._hass.callService(domain, service, data);
+      return true;
     } catch (err) {
       this._callFailed(domain, service, err);
+      return false;
     }
   }
 
@@ -616,21 +773,62 @@ class WoodfireGrillCard extends HTMLElement {
 
   // During an active cook, buffer the edit and surface Apply/Cancel instead of
   // re-issuing the cook on every change. Idle: apply immediately (staged for the
-  // next Start by the integration).
+  // next Start by the integration). While resting, nothing is editable.
   _stageOrApply(key, value, isSwitch, apply) {
+    if (this._restingPhase()) return;
     if (this._active) {
       this._staged[key] = { apply, value, isSwitch };
+      // A new mode brings new ranges: a temp or duration drafted for the old
+      // one was never checked against them and must not ride along.
+      if (key === "cook_mode") {
+        delete this._staged.cook_temp;
+        delete this._staged.cook_duration;
+      }
       this._scheduleRender();
     } else {
       apply();
     }
   }
 
+  // An empty or non-numeric field is a half-finished edit, not a request to
+  // send 0 — drop it rather than pushing it at the grill. The same goes for a
+  // value outside the entity's own min/max/step: Home Assistant would reject
+  // it, so it is better left in the field for the user to correct.
+  // Returns whether the value was accepted.
   _setNumber(key, value) {
     const eid = this._findEntity("number", key);
-    if (!eid) return;
-    this._stageOrApply(key, Number(value), false,
-      () => this._call("number", "set_value", { entity_id: eid, value: Number(value) }));
+    if (!eid || !this._entityUsable("number", key)) return false;
+    if (value === "" || value == null) return false;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return false;
+    const a = this._hassState("number", key)?.attributes || {};
+    const min = Number(a.min);
+    const max = Number(a.max);
+    const step = Number(a.step);
+    if (Number.isFinite(min) && num < min) return false;
+    if (Number.isFinite(max) && num > max) return false;
+    if (Number.isFinite(step) && step > 0) {
+      const steps = (num - (Number.isFinite(min) ? min : 0)) / step;
+      if (Math.abs(steps - Math.round(steps)) > 1e-6) return false;
+    }
+    this._stageOrApply(key, num, false,
+      () => this._call("number", "set_value", { entity_id: eid, value: num }));
+    return true;
+  }
+
+  // Commit a numeric input. A rejected value keeps its dirty mark and is
+  // flagged invalid, so it stays visible and correctable instead of silently
+  // snapping back to the live value.
+  _numberEdited(el, key) {
+    const valid = typeof el.checkValidity !== "function" || el.checkValidity();
+    const ok = valid && this._setNumber(key, el.value);
+    if (!ok) {
+      el.setAttribute("aria-invalid", "true");
+      return false;
+    }
+    el.removeAttribute("aria-invalid");
+    setTimeout(() => { if (el) delete el.dataset.dirty; }, 2000);
+    return true;
   }
 
   _setSelect(key, option) {
@@ -647,11 +845,70 @@ class WoodfireGrillCard extends HTMLElement {
       () => this._call("switch", on ? "turn_on" : "turn_off", { entity_id: eid }));
   }
 
-  _applyStaged() {
-    const staged = this._staged;
-    this._staged = {};
-    for (const k in staged) staged[k].apply();
-    this._scheduleRender();
+  // Send the whole draft as one `configure_cook` command so the settings can't
+  // overwrite each other (a probe target applied after its enable would
+  // otherwise briefly activate the old target). Only the fields the user
+  // actually changed are sent. Without a resolvable device the per-entity
+  // calls remain as a fallback, sent one at a time in an order where each call
+  // can see the previous one.
+  // The draft is applied from a snapshot: an entry is only dropped once the
+  // call confirmed it *and* it is still the value that was sent, so neither a
+  // failure nor an edit made while the call was in flight loses an edit.
+  // Rest ends the cook: the integration refuses a re-issue, so a draft made
+  // before the grill moved on is kept for the user to read or cancel, but is
+  // never sent.
+  async _applyStaged() {
+    if (this._applying || this._restingPhase()) return;
+    const sent = Object.keys(this._staged)
+      .sort((a, b) => APPLY_ORDER.indexOf(a) - APPLY_ORDER.indexOf(b))
+      .map(key => [key, this._staged[key]]);
+    if (!sent.length) return;
+    const generation = this._applyGeneration;
+    this._applying = true;
+    this._render();
+    try {
+      const deviceId = this._deviceId();
+      if (deviceId) {
+        const payload = { device_id: deviceId };
+        for (const [key, entry] of sent) payload[CONFIGURE_FIELDS[key]] = entry.value;
+        if (!await this._call(INTEGRATION_PLATFORM, "configure_cook", payload)) return;
+        if (generation !== this._applyGeneration) return;
+        for (const [key, entry] of sent) this._clearApplied(key, entry);
+        if (payload.mode !== undefined) this._beginModeTransition(payload.mode);
+        return;
+      }
+      for (const [key, entry] of sent) {
+        if (generation !== this._applyGeneration) return;
+        if (!await entry.apply()) return;
+        if (generation !== this._applyGeneration) return;
+        this._clearApplied(key, entry);
+        if (key === "cook_mode") this._beginModeTransition(entry.value);
+      }
+    } finally {
+      this._applying = false;
+      this._scheduleRender();
+    }
+  }
+
+  // Drop a draft entry only while it still holds the value that was sent.
+  _clearApplied(key, entry) {
+    if (this._staged[key] === entry) delete this._staged[key];
+  }
+
+  // Stop ends the cook, so nothing an apply has not sent yet may still go out.
+  // The running apply stops where it is; unsent values stay as a draft (the
+  // render drops it once the grill actually left the cook).
+  _cancelApply() {
+    this._applyGeneration++;
+  }
+
+  // A sent mode change snaps temp + duration ranges on the integration side.
+  // Mute the dependent controls until the new range/unit (or the new mode)
+  // arrives, bounded by a timeout.
+  _beginModeTransition(mode) {
+    this._modeTransitionUntil = Date.now() + MODE_TRANSITION_TIMEOUT_MS;
+    this._modeTransitionSig = this._cookTempSig();
+    this._modeTransitionTarget = mode;
   }
 
   _cancelStaged() {
@@ -718,40 +975,44 @@ class WoodfireGrillCard extends HTMLElement {
       ? setpointSensorState
       : (this._num("number", "cook_temp") ?? null);
 
-    let grillTemp = this._num("sensor", "grill_temp");
-    let airTemp = this._num("sensor", "air_temp");
-    let smokeTemp = this._num("sensor", "smoke_temp");
+    // One normalised classification drives actions, staging, images and the
+    // temperature filter. Anything the firmware reports that isn't a known
+    // cooking phase counts as not-cooking — a new error state must not look
+    // like a running cook.
+    const normState = normaliseState(grillState);
+    const isActive = ACTIVE_STATES.has(normState);
+    const isOff = normState === "off";
+    this._active = isActive;   // gates staging of cook-config edits
+    // Changes staged during a cook can't survive the grill going idle/off.
+    if (!isActive && !this._applying && Object.keys(this._staged).length) this._staged = {};
+
+    const grillTemp = this._temp("grill_temp");
+    const airTemp = this._temp("air_temp");
+    const smokeTemp = this._temp("smoke_temp");
     const lidOpen = this._bool("binary_sensor", "lid_open");
     // Belt-and-braces stale-reading filter on top of the integration's
     // own logic. While the grill is idle / off / unknown, the cloud
     // keeps returning whatever value was last seen — mute anything
-    // above ambient so the dashboard doesn't lie.
-    const _grillIdle = !ACTIVE_STATES.has(String(grillState));
-    if (_grillIdle) {
-      if (grillTemp != null && grillTemp > 50) grillTemp = null;
-      if (airTemp != null && airTemp > 50) airTemp = null;
-      if (smokeTemp != null && smokeTemp > 50) smokeTemp = null;
+    // above ambient so the dashboard doesn't lie. The threshold is
+    // celsius, so a °F display has to be converted before comparing.
+    if (!isActive) {
+      for (const t of [grillTemp, airTemp, smokeTemp]) {
+        if (toCelsius(t.value, t.unit) > 50) t.value = null;
+      }
     }
 
     const endIso = this._state("sensor", "end_time");
     const endTimeSec = endIso ? new Date(endIso).getTime() / 1000 : null;
-    const nowSec = Date.now() / 1000;
-    // Fall back to the seconds_left sensor when the firmware's end timestamp
-    // is absent (e.g. the local BLE transport), so the countdown and progress
-    // bar still work instead of vanishing.
-    const remaining = endTimeSec ? endTimeSec - nowSec
-      : (this._num("sensor", "seconds_left") ?? null);
+    // Which phase the cook is really in: grill_state often stays "cooking"
+    // while cook_state / the progress phase carry the sub-phase that actually
+    // halts the timer (lid open, flip food, get food, …).
+    const phase = this._attr("sensor", "cook_progress", "phase");
+    const ticking = isActive && ![normState, normaliseState(cookState), normaliseState(phase)]
+      .some(s => PAUSED_STATES.has(s));
+    const remaining = this._remaining(endTimeSec, endIso, ticking, isActive);
 
     const cookProgressFromSensor = this._num("sensor", "cook_progress");
     const totalSeconds = (this._num("number", "cook_duration") ?? 0) * 60;
-
-    const isActive = grillState !== "idle" && grillState !== "unknown" &&
-                     grillState !== "unavailable" && !WAITING_STATES.has(grillState) &&
-                     grillState !== "powered OFF" && grillState !== "powered_off";
-    const isOff = grillState === "powered OFF" || grillState === "powered_off";
-    this._active = isActive;   // gates staging of cook-config edits
-    // Changes staged during a cook can't survive the grill going idle/off.
-    if (!isActive && Object.keys(this._staged).length) this._staged = {};
 
     const probe1Connected = this._bool("binary_sensor", "probe0_plugged_in");
     const probe2Connected = this._bool("binary_sensor", "probe1_plugged_in");
@@ -762,12 +1023,11 @@ class WoodfireGrillCard extends HTMLElement {
     // grill_state often just stays "cooking" for the whole session.
     // The integration knows when preheat really ended: the firmware keeps
     // cook_state at "preheat" until "add food" is acknowledged on the grill.
-    const phase = this._attr("sensor", "cook_progress", "phase");
     const inPreheat = phase != null
       ? phase === "preheat"
-      : PREHEAT_LIKE.has(grillState) || PREHEAT_LIKE.has(cookState);
+      : PREHEAT_LIKE.has(normState) || PREHEAT_LIKE.has(normaliseState(cookState));
     const prompt = this._state("sensor", "prompt");
-    const staleCookState = PREHEAT_LIKE.has(cookState) && !inPreheat;
+    const staleCookState = PREHEAT_LIKE.has(normaliseState(cookState)) && !inPreheat;
     const phaseState = isActive && cookState && cookState !== "none" && !staleCookState
       ? cookState
       : grillState;
@@ -819,10 +1079,9 @@ class WoodfireGrillCard extends HTMLElement {
         sub += sub ? " · " : "";
         sub += escapeHtml(fill(this._L.header.cook, { min: totalMin }));
       }
-    } else if (remaining != null && remaining > 0) {
-      sub += sub ? " · " : "";
-      sub += escapeHtml(fill(this._L.header.endsIn, { time: fmtTime(remaining) }));
     }
+    // Remaining time while actively cooking lives only in the progress bar
+    // below — showing it here too would just repeat the same number.
     if (!sub) {
       if (!integrationLoaded) {
         sub = escapeHtml(this._L.header.notLoaded);
@@ -867,7 +1126,11 @@ class WoodfireGrillCard extends HTMLElement {
     // We swap the bar for a preheat indicator: pulsing fill, no countdown.
     const bar = this.shadowRoot.querySelector(".progress-bar");
     if (bar) {
-      if (!isActive || remaining == null) {
+      // Preheating is worth showing even without a cook countdown (the local
+      // BLE transport reports a preheat percentage but no remaining time).
+      const preheatPct = this._num("sensor", "preheat_progress");
+      const showPreheatOnly = inPreheat && preheatPct != null;
+      if (!isActive || (remaining == null && !showPreheatOnly)) {
         bar.style.display = "none";
       } else {
         bar.style.display = "block";
@@ -875,7 +1138,6 @@ class WoodfireGrillCard extends HTMLElement {
           // Use the firmware-reported preheat percentage if available;
           // otherwise leave the bar full so it visually distinguishes
           // from the cook-progress bar.
-          const preheatPct = this._num("sensor", "preheat_progress");
           this._setStyle("progress-fill", "width",
             preheatPct != null ? `${preheatPct}%` : "100%");
           bar.classList.add("preheat-mode");
@@ -893,15 +1155,22 @@ class WoodfireGrillCard extends HTMLElement {
           }
           this._setStyle("progress-fill", "width", `${pct}%`);
           this._setText("progress-label",
-            remaining > 0 ? fmtTime(remaining) : "");
+            remaining > 0 && totalSeconds > 0
+              ? fill(this._L.progress.remainingOfTotal,
+                  { remaining: fmtTime(remaining), total: fmtTime(totalSeconds) })
+              : remaining > 0 ? fmtTime(remaining) : "");
         }
+        // Screen readers announce the bar by its own name, not by the label
+        // element painted inside it.
+        bar.setAttribute("aria-label",
+          this.shadowRoot.querySelector("#progress-label").textContent);
       }
     }
 
     // ----- Temps -----
-    this._setTempCell("grill-temp", grillTemp, "°C");
-    this._setTempCell("air-temp", airTemp, "°C");
-    this._setTempCell("smoke-temp", smokeTemp, "°C");
+    this._setTempCell("grill-temp", grillTemp.value, grillTemp.unit);
+    this._setTempCell("air-temp", airTemp.value, airTemp.unit);
+    this._setTempCell("smoke-temp", smokeTemp.value, smokeTemp.unit);
     this._setText("lid-value", lidOpen ? this._L.lid.open : this._L.lid.closed);
     const lidIconEl = this.shadowRoot.querySelector("#lid-icon");
     if (lidIconEl) {
@@ -940,12 +1209,19 @@ class WoodfireGrillCard extends HTMLElement {
     const skipBtn = this.shadowRoot.querySelector("#btn-skip");
     const stopBtn = this.shadowRoot.querySelector("#btn-stop");
 
-    const showAsPower = isOff || !cloudReachable || !integrationLoaded;
-    // Power-on fires stop_cook; without a reachable grill / button
-    // entity it can't do anything, so show "no connection" instead.
-    const stopEntityState = this._rawState("button", "stop_cook");
-    const noConnection = !cloudReachable || stopEntityState == null
-                         || stopEntityState === "unavailable";
+    // The integration flags this once a Start went unconfirmed (the grill's
+    // own beacon never showed an active phase) -- the only way it can tell
+    // "asleep but radio-reachable" apart from "genuinely idle", since both
+    // look identical beforehand. Offer Wake instead of a Start that would
+    // likely be ignored again.
+    const likelyAsleep = this._attr("binary_sensor", "ble_connected", "likely_asleep") === true;
+    const showAsPower = isOff || likelyAsleep || !cloudReachable || !integrationLoaded;
+    // Wake is only offered when a wake path actually exists: the BLE wake
+    // entity (usable precisely while the grill is asleep/offline) or, on a
+    // cloud backend, the stop_cook nudge that only works while the cloud
+    // still answers.
+    const noConnection = this._wakeTarget() == null;
+    const stopAvailable = this._entityUsable("button", "stop_cook");
     const pending = this._pendingAction;
     // Map button → label/icon to swap in while it's the pending one.
     const PENDING_LABEL = this._L.pending;
@@ -953,7 +1229,7 @@ class WoodfireGrillCard extends HTMLElement {
     if (startBtn && startIcon && startLabel) {
       if (showAsPower) {
         startBtn.classList.add("is-power");
-        startIcon.setAttribute("icon", noConnection ? "mdi:cloud-off-outline" : "mdi:power");
+        startIcon.setAttribute("icon", noConnection ? "mdi:lan-disconnect" : "mdi:power");
         startLabel.textContent = noConnection ? this._L.button.noConnection : this._L.button.power;
         startBtn.toggleAttribute("disabled", noConnection);
       } else {
@@ -972,8 +1248,13 @@ class WoodfireGrillCard extends HTMLElement {
       }
     }
     if (stopBtn) {
-      this._setBtnDisabled("btn-stop", !isActive);
-      stopBtn.style.display = (showAsPower) ? "none" : "";
+      // Stop is an independent path: the integration marks it always
+      // available and decides itself whether a stop can be carried out
+      // (it also retracts a command the grill never acknowledged). Neither
+      // a draft, nor another pending action, nor a lost connection may take
+      // it away — only a missing entity does.
+      this._setBtnDisabled("btn-stop", !stopAvailable);
+      stopBtn.style.display = stopAvailable ? "" : "none";
       const stopIcon = stopBtn.querySelector("ha-icon");
       if (pending === "stop") {
         if (stopIcon) {
@@ -1020,20 +1301,27 @@ class WoodfireGrillCard extends HTMLElement {
         });
       }
     }
-    // While any action is pending, disable ALL action buttons so the
-    // user can't fire a different command on top.
+    // While any action is pending, disable the other action buttons so the
+    // user can't fire a different command on top. Stop is exempt — it is the
+    // way out of a command that never landed.
     if (pending) {
-      [startBtn, stopBtn, skipBtn].forEach(b => b && b.setAttribute("disabled", ""));
+      [startBtn, skipBtn].forEach(b => b && b.setAttribute("disabled", ""));
     }
     // Staged cook-config edits during a cook: morph the action row into
     // Cancel / Apply until the user confirms.
     const staging = this._active && Object.keys(this._staged).length > 0;
     const confirmBtn = this.shadowRoot.querySelector("#btn-confirm");
     const cancelBtn = this.shadowRoot.querySelector("#btn-cancel");
-    if (confirmBtn) confirmBtn.style.display = staging ? "" : "none";
-    if (cancelBtn) cancelBtn.style.display = staging ? "" : "none";
+    if (confirmBtn) {
+      confirmBtn.style.display = staging ? "" : "none";
+      confirmBtn.toggleAttribute("disabled", this._applying || this._restingPhase());
+    }
+    if (cancelBtn) {
+      cancelBtn.style.display = staging ? "" : "none";
+      cancelBtn.toggleAttribute("disabled", this._applying);
+    }
     if (staging) {
-      [startBtn, stopBtn, skipBtn].forEach(b => b && (b.style.display = "none"));
+      [startBtn, skipBtn].forEach(b => b && (b.style.display = "none"));
     } else if (startBtn) {
       startBtn.style.display = "";
     }
@@ -1041,7 +1329,7 @@ class WoodfireGrillCard extends HTMLElement {
     // evenly (Apply/Cancel while staging, otherwise the cook controls).
     const actions = this.shadowRoot.querySelector(".actions-primary");
     if (actions) {
-      const row = staging ? [cancelBtn, confirmBtn] : [startBtn, stopBtn, skipBtn];
+      const row = staging ? [cancelBtn, confirmBtn, stopBtn] : [startBtn, stopBtn, skipBtn];
       const visible = row.filter(b => b && b.style.display !== "none").length;
       actions.style.gridTemplateColumns = `repeat(${visible || 1}, 1fr)`;
     }
@@ -1072,8 +1360,8 @@ class WoodfireGrillCard extends HTMLElement {
     }
     block.style.display = "grid";
     const k = uiIdx - 1;
-    const temp = this._num("sensor", `probe${k}_temp`);
-    const target = this._num("sensor", `probe${k}_setpoint`);
+    const temp = this._temp(`probe${k}_temp`);
+    const target = this._temp(`probe${k}_setpoint`);
     const progress = this._num("sensor", `probe${k}_progress`, 0);
     const active = this._bool("binary_sensor", `probe${k}_active`);
     const pct = Math.max(0, Math.min(100, progress));
@@ -1083,9 +1371,10 @@ class WoodfireGrillCard extends HTMLElement {
       if (el.textContent !== text) el.textContent = text;
     };
     block.querySelector(".dot").style.display = active ? "" : "none";
-    setText(".probe-temp", temp != null ? `${Math.round(temp * 10) / 10}°C` : "—");
-    block.querySelector(".probe-target-wrap").hidden = !target;
-    setText(".probe-target", target ? `${target}°C` : "");
+    setText(".probe-temp",
+      temp.value != null ? `${Math.round(temp.value * 10) / 10}${temp.unit}` : "—");
+    block.querySelector(".probe-target-wrap").hidden = !target.value;
+    setText(".probe-target", target.value ? `${target.value}${target.unit}` : "");
     setText(".probe-pct", `(${Math.round(pct)}%)`);
     const fillEl = block.querySelector(".probe-fill");
     fillEl.style.width = `${pct}%`;
@@ -1099,6 +1388,39 @@ class WoodfireGrillCard extends HTMLElement {
     if (!btn) return;
     if (disabled) btn.setAttribute("disabled", "");
     else btn.removeAttribute("disabled");
+  }
+
+  // Staged (un-applied) value for an entity key, or undefined. The draft is
+  // what Apply will send, so every control renders `draft ?? live`.
+  _stagedValue(key) {
+    return Object.prototype.hasOwnProperty.call(this._staged, key)
+      ? this._staged[key].value
+      : undefined;
+  }
+
+  // A drafted mode that hasn't been sent yet: ranges, units and supported
+  // switches still describe the old mode, so the dependent controls must not
+  // offer values from it. They unlock once the mode has been applied.
+  _modeDraftPending() {
+    const staged = this._stagedValue("cook_mode");
+    return staged !== undefined && staged !== this._state("select", "cook_mode");
+  }
+
+  // The cook is finished and resting: the integration refuses to re-issue it,
+  // so the card must not offer a change that can only fail. Like the pause
+  // phases, rest shows up in the main state, the cook sub-state or the
+  // progress phase.
+  _restingPhase() {
+    return [this._state("sensor", "grill_state"), this._state("sensor", "cook_state"),
+            this._attr("sensor", "cook_progress", "phase")]
+      .some(s => REST_STATES.has(normaliseState(s)));
+  }
+
+  // Editable controls can't be trusted: a mode change is in flight or drafted,
+  // or the cook is resting and no longer takes changes at all.
+  _valuesMuted() {
+    return Date.now() < this._modeTransitionUntil || this._modeDraftPending()
+      || this._restingPhase();
   }
 
   // Patches inputs/switches in the cook-config panel from current HA state.
@@ -1118,6 +1440,7 @@ class WoodfireGrillCard extends HTMLElement {
     this._renderTempControl();
     this._renderDurationControl();
 
+    const muted = this._valuesMuted();
     const setSwitch = (sel, key) => {
       const el = root.querySelector(sel);
       if (!el) return;
@@ -1128,7 +1451,7 @@ class WoodfireGrillCard extends HTMLElement {
       // see *why* a control is grayed out.
       const rawState = this._rawState("switch", key);
       const unavailable = rawState === "unavailable" || rawState == null;
-      el.toggleAttribute("disabled", unavailable);
+      el.toggleAttribute("disabled", unavailable || muted);
       // Dim the whole grid row containing this switch.
       const row = el.closest(".row") || el.previousElementSibling;
       if (row) row.classList.toggle("disabled-row", unavailable);
@@ -1136,6 +1459,11 @@ class WoodfireGrillCard extends HTMLElement {
       const prev = el.previousElementSibling;
       if (prev && prev.tagName === "LABEL") {
         prev.classList.toggle("disabled-row", unavailable);
+      }
+      const staged = this._stagedValue(key);
+      if (staged !== undefined) {
+        el.checked = !!staged;
+        return;
       }
       if (el.dataset.dirty === "1") return;
       const on = this._bool("switch", key);
@@ -1146,49 +1474,45 @@ class WoodfireGrillCard extends HTMLElement {
     setSwitch("#ctl-probe1en", "probe0_enabled");
     setSwitch("#ctl-probe2en", "probe1_enabled");
 
-    // Probe target-temp inputs: dim when the matching enable-switch
-    // is unavailable (mode doesn't support probes at all) or off.
-    const setProbeTemp = (sel, enableKey) => {
+    // Probe target-temp inputs: limits and availability come from the number
+    // entity, the enabled-state from the effective draft, so activating a
+    // probe and picking its target happen in one go.
+    const setProbeTemp = (sel, enableKey, numberKey) => {
       const inp = root.querySelector(sel);
       if (!inp) return;
       const enableState = this._rawState("switch", enableKey);
-      const enableOn = enableState === "on";
       const enableAvail = enableState === "on" || enableState === "off";
-      inp.toggleAttribute("disabled", !enableAvail || !enableOn);
-    };
-    setProbeTemp("#ctl-probe1temp", "probe0_enabled");
-    setProbeTemp("#ctl-probe2temp", "probe1_enabled");
+      const staged = this._stagedValue(enableKey);
+      const enableOn = staged !== undefined ? !!staged : enableState === "on";
+      const numberEntity = this._hassState("number", numberKey);
+      const numberUsable = this._entityUsable("number", numberKey);
+      this._applyNumberLimits(inp, numberEntity);
+      inp.toggleAttribute("disabled", !enableAvail || !enableOn || !numberUsable || muted);
 
-    const setIfClean = (sel, value) => {
-      const el = root.querySelector(sel);
-      if (!el) return;
-      if (el.dataset.dirty === "1") return;
-      if (el.value !== String(value)) el.value = value;
-    };
-    const p1 = this._num("number", "probe0_target_temp");
-    const p2 = this._num("number", "probe1_target_temp");
-    if (p1 != null) setIfClean("#ctl-probe1temp", p1);
-    if (p2 != null) setIfClean("#ctl-probe2temp", p2);
-
-    // Staged (un-applied) edits win over live values so the user sees what Apply
-    // will send.
-    const STAGED_SEL = {
-      cook_duration: "#ctl-dur", cook_temp: "#ctl-temp", cook_mode: "#ctl-mode",
-      cook_smoke: "#ctl-smoke", cook_skip_preheat: "#ctl-skip",
-      probe0_enabled: "#ctl-probe1en", probe1_enabled: "#ctl-probe2en",
-      probe0_target_temp: "#ctl-probe1temp", probe1_target_temp: "#ctl-probe2temp",
-    };
-    for (const key in this._staged) {
-      const el = root.querySelector(STAGED_SEL[key]);
-      if (!el) continue;
-      const { value, isSwitch } = this._staged[key];
-      if (isSwitch) el.checked = !!value;
-      else el.value = value;
-      if (key === "cook_duration") {
-        const badge = root.querySelector("#ctl-dur-badge");
-        if (badge) badge.textContent = `${value}m`;
+      const stagedTarget = this._stagedValue(numberKey);
+      if (stagedTarget !== undefined) {
+        if (inp.value !== String(stagedTarget)) inp.value = stagedTarget;
+        return;
       }
-    }
+      if (inp.dataset.dirty === "1") return;
+      const live = this._num("number", numberKey);
+      if (live != null && inp.value !== String(live)) inp.value = live;
+    };
+    setProbeTemp("#ctl-probe1temp", "probe0_enabled", "probe0_target_temp");
+    setProbeTemp("#ctl-probe2temp", "probe1_enabled", "probe1_target_temp");
+  }
+
+  // Mirror a number entity's min/max/step onto an input instead of relying on
+  // the skeleton's hard-coded limits.
+  _applyNumberLimits(inp, entity) {
+    const a = entity?.attributes || {};
+    const set = (prop, value) => {
+      if (value == null) return;
+      if (inp[prop] !== String(value)) inp[prop] = value;
+    };
+    set("min", a.min);
+    set("max", a.max);
+    set("step", a.step);
   }
 
   _cookTempSig() {
@@ -1208,6 +1532,15 @@ class WoodfireGrillCard extends HTMLElement {
     if (backend) {
       const name = backend === "ble" ? D.local : `${D.cloud} (${backend.toUpperCase()})`;
       parts.push([D.backend, name]);
+    }
+    // Hybrid setups (cloud active, BLE also configured as the preferred
+    // transport): show whether BLE is reachable independent of "Connection"
+    // above, which only reports whichever backend served this poll's data.
+    if (backend && backend !== "ble") {
+      const bleState = this._rawState("binary_sensor", "ble_connected");
+      if (bleState === "on" || bleState === "off") {
+        parts.push([D.ble, bleState === "on" ? D.on : D.off]);
+      }
     }
     const fw = this._state("sensor", "firmware_version");
     if (fw) parts.push([D.firmware, fw]);
@@ -1243,7 +1576,10 @@ class WoodfireGrillCard extends HTMLElement {
     // detect the transition and clear the pending flag.
     this._pendingAction = action;
     this._pendingFromState = this._rawState("sensor", "grill_state");
-    this._pendingDeadline = Date.now() + 10000;  // 10s watchdog
+    // 25s watchdog: a BLE round-trip on this grill can take 10-20s, not the
+    // nominal poll interval, so a shorter deadline re-enables the button
+    // before a genuinely slow confirmation has had a chance to land.
+    this._pendingDeadline = Date.now() + 25000;
     this._render();
   }
 
@@ -1263,24 +1599,20 @@ class WoodfireGrillCard extends HTMLElement {
       return;
     }
 
-    const STOP_LIKE = new Set([
-      "idle", "done", "powered OFF", "powered_off", "off",
-    ]);
+    const now = normaliseState(currentState);
     const targetReached = (() => {
       switch (this._pendingAction) {
         case "start":
-          return ACTIVE_STATES.has(currentState);
+          return ACTIVE_STATES.has(now);
         case "stop":
-          return STOP_LIKE.has(currentState);
+          return STOP_LIKE_STATES.has(now);
         case "skip":
           // After skip-preheat the firmware moves preheat → heat/cooking.
-          return currentState !== "preheat" && currentState !== "preheating"
+          return !PREHEAT_LIKE.has(now)
                  && currentState != null && currentState !== this._pendingFromState;
         case "power":
-          // Wake: anything that isn't powered_off / unavailable.
-          return currentState != null
-                 && !["powered OFF", "powered_off", "off", "unavailable"]
-                      .includes(currentState);
+          // Wake: anything that isn't off / unavailable.
+          return currentState != null && now !== "off" && now !== "unavailable";
         default:
           return false;
       }
@@ -1302,7 +1634,7 @@ class WoodfireGrillCard extends HTMLElement {
       <style>${this._styles()}</style>
       <ha-card>
         <div id="unavail-banner" class="unavail-banner" style="display:none">
-          <ha-icon icon="mdi:cloud-off-outline"></ha-icon>
+          <ha-icon icon="mdi:lan-disconnect"></ha-icon>
           <span id="unavail-text">${escapeHtml(L.banner.unreachableShort)}</span>
         </div>
         <div id="header" class="header">
@@ -1313,7 +1645,7 @@ class WoodfireGrillCard extends HTMLElement {
           </div>
         </div>
 
-        <div class="progress-bar" style="display:none">
+        <div class="progress-bar" role="progressbar" style="display:none">
           <div id="progress-fill" class="progress-fill"></div>
           <div id="progress-label" class="progress-label"></div>
         </div>
@@ -1368,34 +1700,36 @@ class WoodfireGrillCard extends HTMLElement {
           </button>
           <div id="ctl-panel" class="ctl-panel" hidden>
             <div class="ctrl-grid">
-              <label>${escapeHtml(L.control.mode)}</label>
+              <label for="ctl-mode">${escapeHtml(L.control.mode)}</label>
               <select id="ctl-mode"></select>
 
               <label id="ctl-temp-label">${escapeHtml(L.control.heat)}</label>
               <div id="ctl-temp-slot"></div>
 
-              <label>${escapeHtml(L.control.duration)}</label>
+              <label for="ctl-dur">${escapeHtml(L.control.duration)}</label>
               <div class="row">
                 <input id="ctl-dur" type="range" min="1" max="720" value="30">
                 <span id="ctl-dur-badge" class="badge">30m</span>
               </div>
 
-              <label>${escapeHtml(L.control.smoke)}</label>
-              <ha-switch id="ctl-smoke"></ha-switch>
+              <label id="ctl-smoke-label">${escapeHtml(L.control.smoke)}</label>
+              <ha-switch id="ctl-smoke" aria-label="${escapeHtml(L.control.smoke)}"></ha-switch>
 
-              <label>${escapeHtml(L.control.skipPreheat)}</label>
-              <ha-switch id="ctl-skip"></ha-switch>
+              <label id="ctl-skip-label">${escapeHtml(L.control.skipPreheat)}</label>
+              <ha-switch id="ctl-skip" aria-label="${escapeHtml(L.control.skipPreheat)}"></ha-switch>
 
-              <label>${escapeHtml(fill(L.probe.target, { n: 1 }))}</label>
+              <label id="ctl-probe1-label" for="ctl-probe1temp">${escapeHtml(fill(L.probe.target, { n: 1 }))}</label>
               <div class="row">
-                <ha-switch id="ctl-probe1en"></ha-switch>
-                <input id="ctl-probe1temp" type="number" min="30" max="110" value="60" class="num">
+                <ha-switch id="ctl-probe1en" aria-label="${escapeHtml(fill(L.probe.name, { n: 1 }))}"></ha-switch>
+                <input id="ctl-probe1temp" type="number" min="30" max="110" value="60" class="num"
+                       aria-label="${escapeHtml(fill(L.probe.target, { n: 1 }))}">
               </div>
 
-              <label>${escapeHtml(fill(L.probe.target, { n: 2 }))}</label>
+              <label id="ctl-probe2-label" for="ctl-probe2temp">${escapeHtml(fill(L.probe.target, { n: 2 }))}</label>
               <div class="row">
-                <ha-switch id="ctl-probe2en"></ha-switch>
-                <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num">
+                <ha-switch id="ctl-probe2en" aria-label="${escapeHtml(fill(L.probe.name, { n: 2 }))}"></ha-switch>
+                <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num"
+                       aria-label="${escapeHtml(fill(L.probe.target, { n: 2 }))}">
               </div>
             </div>
           </div>
@@ -1432,20 +1766,16 @@ class WoodfireGrillCard extends HTMLElement {
     });
     durInput.addEventListener("change", e => {
       e.target.blur();
-      this._setNumber("cook_duration", e.target.value);
-      setTimeout(() => clearDirty(e.target), 2000);
+      this._numberEdited(e.target, "cook_duration");
     });
 
     const modeSel = $("#ctl-mode");
     modeSel.addEventListener("change", e => {
       markDirty(e.target);
       e.target.blur();
-      // Mode change snaps temp + duration ranges on the integration
-      // side. Mute the dependent controls until the new cook_temp
-      // range/unit (or the new mode) arrives, bounded by a timeout.
-      this._modeTransitionUntil = Date.now() + MODE_TRANSITION_TIMEOUT_MS;
-      this._modeTransitionSig = this._cookTempSig();
-      this._modeTransitionTarget = e.target.value;
+      // Only a mode that is sent right away starts the range transition. A
+      // staged one mutes the dependent controls until Apply instead.
+      if (!this._active) this._beginModeTransition(e.target.value);
       this._setSelect("cook_mode", e.target.value);
       setTimeout(() => clearDirty(e.target), 2000);
       this._scheduleRender();
@@ -1467,22 +1797,22 @@ class WoodfireGrillCard extends HTMLElement {
     const wireNum = (sel, key) => {
       const el = $(sel);
       el.addEventListener("input", () => markDirty(el));
-      el.addEventListener("change", e => {
-        this._setNumber(key, e.target.value);
-        setTimeout(() => clearDirty(el), 2000);
-      });
+      el.addEventListener("change", e => this._numberEdited(e.target, key));
     };
     wireNum("#ctl-probe1temp", "probe0_target_temp");
     wireNum("#ctl-probe2temp", "probe1_target_temp");
 
     $("#btn-start").addEventListener("click", () => {
       if (this._pendingAction) return;
-      // The Start button doubles as a Power-on button when the grill
-      // is off / unavailable. .is-power is applied by the render loop
-      // based on rawGrillState; firing stop_cook in that mode wakes
-      // the grill (cloud has no dedicated wake endpoint).
+      // The Start button doubles as a Wake button when the grill is off /
+      // unavailable. .is-power is applied by the render loop. Over BLE the
+      // dedicated "wake" button is pressed so the integration applies its own
+      // guards (e.g. never touching an active cook) instead of the card
+      // re-implementing that logic via stop_cook.
       const startBtnEl = this.shadowRoot.querySelector("#btn-start");
       const wakeMode = startBtnEl?.classList.contains("is-power");
+      const wakeTarget = wakeMode ? this._wakeTarget() : null;
+      if (wakeMode && !wakeTarget) return;
       // Closing the panel on Start is a small thing that makes the
       // tile feel "committed" — the card is now showing live state,
       // not configuration.
@@ -1495,10 +1825,13 @@ class WoodfireGrillCard extends HTMLElement {
         toggleEl.classList.remove("open");
       }
       this._markPending(wakeMode ? "power" : "start");
-      this._press(wakeMode ? "stop_cook" : "start_cook");
+      this._press(wakeMode ? wakeTarget : "start_cook");
     });
     $("#btn-stop").addEventListener("click", () => {
-      if (this._pendingAction) return;
+      // Only a pending Stop blocks another Stop; any other pending action
+      // must not take the way out away.
+      if (this._pendingAction === "stop") return;
+      this._cancelApply();
       this._markPending("stop");
       this._press("stop_cook");
     });
@@ -1535,12 +1868,15 @@ class WoodfireGrillCard extends HTMLElement {
     const labelEl = this.shadowRoot.querySelector("#ctl-temp-label");
     if (!slot || !labelEl) return;
 
-    const inModeTransition = Date.now() < this._modeTransitionUntil;
+    const inModeTransition = this._valuesMuted();
     const tempE = this._hassState("number", "cook_temp");
     const tempMin = tempE?.attributes?.min ?? 1;
     const tempMax = tempE?.attributes?.max ?? 300;
     const tempUnit = tempE?.attributes?.unit_of_measurement || "";
-    const tempVal = tempE ? parseFloat(tempE.state) : NaN;
+    const stagedTemp = this._stagedValue("cook_temp");
+    const tempVal = stagedTemp !== undefined
+      ? parseFloat(stagedTemp)
+      : (tempE ? parseFloat(tempE.state) : NaN);
     const isHeatLevel = !tempUnit || tempUnit.toLowerCase() === "level";
 
     const wantVariant = isHeatLevel ? "heat" : "slider";
@@ -1549,10 +1885,14 @@ class WoodfireGrillCard extends HTMLElement {
       labelEl.textContent = isHeatLevel
         ? this._L.control.heat
         : `${this._L.control.temp}${tempUnit ? ` (${tempUnit})` : ""}`;
+      // The heat variant is a button group, which a <label for> can't name;
+      // it is labelled by the same element instead.
+      if (isHeatLevel) labelEl.removeAttribute("for");
+      else labelEl.setAttribute("for", "ctl-temp");
 
       if (isHeatLevel) {
         slot.innerHTML = `
-          <div id="ctl-heat" class="seg-group">
+          <div id="ctl-heat" class="seg-group" role="group" aria-labelledby="ctl-temp-label">
             <button type="button" class="seg" data-val="1">${escapeHtml(this._L.level[1])}</button>
             <button type="button" class="seg" data-val="2">${escapeHtml(this._L.level[2])}</button>
             <button type="button" class="seg" data-val="3">${escapeHtml(this._L.level[3])}</button>
@@ -1585,8 +1925,7 @@ class WoodfireGrillCard extends HTMLElement {
         });
         tempInput.addEventListener("change", e => {
           e.target.blur();
-          this._setNumber("cook_temp", e.target.value);
-          setTimeout(() => delete e.target.dataset.dirty, 2000);
+          this._numberEdited(e.target, "cook_temp");
         });
       }
       slot.dataset.variant = wantVariant;
@@ -1605,11 +1944,16 @@ class WoodfireGrillCard extends HTMLElement {
         ? tempVal
         : SETPOINT_LEVELS[String(this._state("sensor", "setpoint") ?? "").toLowerCase()];
       const group = slot.querySelector("#ctl-heat");
-      const dirty = group && group.dataset.dirty === "1";
+      // A draft is the value Apply will send: it outranks the drag marker,
+      // which only exists to survive the few ticks before HA echoes back.
+      const dirty = stagedTemp === undefined && group && group.dataset.dirty === "1";
+      // Same availability gate as the slider variant: an unavailable entity
+      // can't take a value, so the levels must not look selectable.
+      const usable = this._entityUsable("number", "cook_temp");
       slot.querySelectorAll("button.seg").forEach(btn => {
         const v = parseInt(btn.dataset.val, 10);
         if (!dirty) btn.classList.toggle("active", !inModeTransition && v === level);
-        if (inModeTransition || v < tempMin || v > tempMax) {
+        if (inModeTransition || !usable || v < tempMin || v > tempMax) {
           btn.setAttribute("disabled", "");
         } else {
           btn.removeAttribute("disabled");
@@ -1619,14 +1963,13 @@ class WoodfireGrillCard extends HTMLElement {
       const tempInput = slot.querySelector("#ctl-temp");
       const badge = slot.querySelector("#ctl-temp-badge");
       if (tempInput) {
-        if (tempInput.min !== String(tempMin)) tempInput.min = tempMin;
-        if (tempInput.max !== String(tempMax)) tempInput.max = tempMax;
-        if (inModeTransition) {
+        this._applyNumberLimits(tempInput, tempE);
+        if (inModeTransition || !this._entityUsable("number", "cook_temp")) {
           tempInput.setAttribute("disabled", "");
           if (badge) badge.textContent = "…";
         } else {
           tempInput.removeAttribute("disabled");
-          if (tempInput.dataset.dirty !== "1" && !isNaN(tempVal)) {
+          if ((stagedTemp !== undefined || tempInput.dataset.dirty !== "1") && !isNaN(tempVal)) {
             if (tempInput.value !== String(tempVal)) tempInput.value = tempVal;
             if (badge) badge.textContent = `${tempVal}${tempUnit}`;
           }
@@ -1641,7 +1984,10 @@ class WoodfireGrillCard extends HTMLElement {
     const sel = this.shadowRoot.querySelector("#ctl-mode");
     if (!sel) return;
     const opts = this._attr("select", "cook_mode", "options") || [];
-    const current = this._state("select", "cook_mode");
+    // A resting cook takes no change at all, not even a new mode.
+    sel.toggleAttribute("disabled", this._restingPhase());
+    const staged = this._stagedValue("cook_mode");
+    const current = staged !== undefined ? staged : this._state("select", "cook_mode");
 
     // Compare existing options to wanted; rebuild only if list differs.
     const currentValues = Array.from(sel.options).map(o => o.value);
@@ -1653,7 +1999,7 @@ class WoodfireGrillCard extends HTMLElement {
         .join("");
     }
 
-    if (sel.dataset.dirty !== "1" && current && sel.value !== current) {
+    if ((staged !== undefined || sel.dataset.dirty !== "1") && current && sel.value !== current) {
       sel.value = current;
     }
   }
@@ -1663,20 +2009,17 @@ class WoodfireGrillCard extends HTMLElement {
     const inp = this.shadowRoot.querySelector("#ctl-dur");
     const badge = this.shadowRoot.querySelector("#ctl-dur-badge");
     if (!inp) return;
-    const inModeTransition = Date.now() < this._modeTransitionUntil;
     const e = this._hassState("number", "cook_duration");
-    const dmin = e?.attributes?.min ?? 1;
-    const dmax = e?.attributes?.max ?? 720;
-    if (inp.min !== String(dmin)) inp.min = dmin;
-    if (inp.max !== String(dmax)) inp.max = dmax;
-    if (inModeTransition) {
+    this._applyNumberLimits(inp, e);
+    if (this._valuesMuted() || !this._entityUsable("number", "cook_duration")) {
       inp.setAttribute("disabled", "");
       if (badge) badge.textContent = "…";
       return;
     }
     inp.removeAttribute("disabled");
-    const v = e ? parseFloat(e.state) : null;
-    if (v != null && !isNaN(v) && inp.dataset.dirty !== "1") {
+    const staged = this._stagedValue("cook_duration");
+    const v = staged !== undefined ? parseFloat(staged) : (e ? parseFloat(e.state) : null);
+    if (v != null && !isNaN(v) && (staged !== undefined || inp.dataset.dirty !== "1")) {
       if (inp.value !== String(v)) inp.value = v;
       if (badge && badge.textContent !== `${v}m`) badge.textContent = `${v}m`;
     }
