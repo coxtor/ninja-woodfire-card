@@ -721,6 +721,28 @@ test("a probe with no preset selected shows a disabled doneness select", () => {
   assert.ok(t.$("#ctl-probe1doneness").hasAttribute("disabled"));
 });
 
+test("show_probe_presets: false hides the preset selects from the card", () => {
+  const t = makeCard(
+    {
+      ...ACTIVE_COOK,
+      "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef"] } },
+    },
+    { config: { show_probe_presets: false } },
+  );
+  assert.equal(t.$("#ctl-probe1food"), null);
+  assert.equal(t.$("#ctl-probe1doneness"), null);
+  // The rest of the probe control (enable switch, manual target) stays.
+  assert.ok(t.$("#ctl-probe1temp"));
+});
+
+test("the preset selects show by default", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef"] } },
+  });
+  assert.ok(t.$("#ctl-probe1food"));
+});
+
 // --- R1: the seconds_left fallback holds its value across a pause ------------
 
 test("R1 the seconds_left countdown holds on pause and resumes from the held value", () => {

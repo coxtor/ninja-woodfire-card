@@ -83,6 +83,7 @@ dsn: AC000W0XXXXXXXX   # optional, only needed with multiple grills
 | Option | Required | Description |
 |--------|----------|-------------|
 | `dsn`  | no       | The grill's DSN (case-insensitive), shown as serial number under *Settings → Devices → Ninja Woodfire*. Without it (or if it matches no device) the card uses your single Ninja Woodfire device automatically — including a local Bluetooth entry, whose identifier is the grill's Bluetooth address rather than a cloud DSN. |
+| `show_probe_presets` | no | Set to `false` to hide the probe food/doneness preset selects and show only the plain °C target. Defaults to `true`. |
 
 ## Languages
 

@@ -1693,6 +1693,13 @@ class WoodfireGrillCard extends HTMLElement {
     // have placeholder containers (#ctl-mode, #ctl-temp-slot) that
     // _refreshControlValues fills in-place.
     const L = this._L;
+    const showPresets = this._config.show_probe_presets !== false;
+    const presetRow = (idx) => !showPresets ? "" : `
+              <label for="ctl-probe${idx}food">${escapeHtml(fill(L.probe.food, { n: idx }))}</label>
+              <div class="row">
+                <select id="ctl-probe${idx}food" aria-label="${escapeHtml(fill(L.probe.food, { n: idx }))}"></select>
+                <select id="ctl-probe${idx}doneness" aria-label="${escapeHtml(fill(L.probe.doneness, { n: idx }))}"></select>
+              </div>`;
     this.shadowRoot.innerHTML = `
       <style>${this._styles()}</style>
       <ha-card>
@@ -1788,11 +1795,7 @@ class WoodfireGrillCard extends HTMLElement {
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 1 }))}">
               </div>
 
-              <label for="ctl-probe1food">${escapeHtml(fill(L.probe.food, { n: 1 }))}</label>
-              <div class="row">
-                <select id="ctl-probe1food" aria-label="${escapeHtml(fill(L.probe.food, { n: 1 }))}"></select>
-                <select id="ctl-probe1doneness" aria-label="${escapeHtml(fill(L.probe.doneness, { n: 1 }))}"></select>
-              </div>
+              ${presetRow(1)}
 
               <label id="ctl-probe2-label" for="ctl-probe2temp">${escapeHtml(fill(L.probe.target, { n: 2 }))}</label>
               <div class="row">
@@ -1801,11 +1804,7 @@ class WoodfireGrillCard extends HTMLElement {
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 2 }))}">
               </div>
 
-              <label for="ctl-probe2food">${escapeHtml(fill(L.probe.food, { n: 2 }))}</label>
-              <div class="row">
-                <select id="ctl-probe2food" aria-label="${escapeHtml(fill(L.probe.food, { n: 2 }))}"></select>
-                <select id="ctl-probe2doneness" aria-label="${escapeHtml(fill(L.probe.doneness, { n: 2 }))}"></select>
-              </div>
+              ${presetRow(2)}
             </div>
           </div>
         </div>
@@ -1881,6 +1880,7 @@ class WoodfireGrillCard extends HTMLElement {
     // _renderProbePresetSelects for why.
     const wirePreset = (sel, key) => {
       const el = $(sel);
+      if (!el) return;  // show_probe_presets: false - not in the DOM
       el.addEventListener("change", e => {
         markDirty(el);
         const eid = this._findEntity("select", key);
