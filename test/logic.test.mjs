@@ -870,10 +870,58 @@ test("clicking the cook-by toggle switches which panel half is shown", () => {
   assert.equal(t.$("#ctl-probe1food-row").style.display, "none");
 });
 
-test("the probe stays usable as a temperature alarm while cooking by time", () => {
+test("the probe's own target row is hidden while cooking by time", () => {
+  // Superseded design: the plain target used to double as a makeshift alarm
+  // in time style. Now that a dedicated alarm row exists (always visible,
+  // see below), showing the target too was redundant - the tabs should
+  // cleanly separate "driving the cook" (temp) from "just watching" (time).
   const t = makeCard({ ...ACTIVE_COOK, "binary_sensor.probe0_plugged_in": "on" });
-  // Not gated on cook style - same as it always was, independent of time/temp.
-  assert.ok(!t.$("#ctl-probe1en").hasAttribute("disabled"));
+  t.$("#ctl-style-time").fire("click");
+  assert.equal(t.$("#ctl-probe1-label").style.display, "none");
+  assert.equal(t.$("#ctl-probe1en").closest(".row").style.display, "none");
+});
+
+test("the probe's own target row shows again while cooking by temperature", () => {
+  const t = makeCard({ ...ACTIVE_COOK, "binary_sensor.probe0_plugged_in": "on" });
+  t.$("#ctl-style-temp").fire("click");
+  assert.equal(t.$("#ctl-probe1-label").style.display, "");
+  assert.equal(t.$("#ctl-probe1en").closest(".row").style.display, "");
+});
+
+test("the alarm row stays usable regardless of cook style", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "switch.probe0_alarm_enabled": "off",
+    "number.probe0_alarm_temp": { state: "60", attributes: { min: 30, max: 110, step: 1 } },
+  });
+  t.$("#ctl-style-time").fire("click");
+  assert.notEqual(t.$("#ctl-probe1alarm-label").style.display, "none");
+  assert.ok(!t.$("#ctl-probe1alarmen").hasAttribute("disabled"));
+  t.$("#ctl-style-temp").fire("click");
+  assert.notEqual(t.$("#ctl-probe1alarm-label").style.display, "none");
+});
+
+test("the alarm controls are disabled for a probe that isn't plugged in", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "off",
+    "switch.probe0_alarm_enabled": "off",
+    "number.probe0_alarm_temp": { state: "60", attributes: { min: 30, max: 110, step: 1 } },
+  });
+  assert.ok(t.$("#ctl-probe1alarmen").hasAttribute("disabled"));
+  assert.ok(t.$("#ctl-probe1alarmtemp").hasAttribute("disabled"));
+});
+
+test("the alarm controls are usable once the probe is plugged in", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "switch.probe0_alarm_enabled": "off",
+    "number.probe0_alarm_temp": { state: "60", attributes: { min: 30, max: 110, step: 1 } },
+  });
+  assert.ok(!t.$("#ctl-probe1alarmen").hasAttribute("disabled"));
+  assert.ok(!t.$("#ctl-probe1alarmtemp").hasAttribute("disabled"));
 });
 
 test("an explicit cook-by choice survives a re-render", () => {

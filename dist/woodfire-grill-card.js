@@ -1684,33 +1684,46 @@ class WoodfireGrillCard extends HTMLElement {
 
     // Alarm controls: plain HA entities, no staging and no mode-availability
     // gating (works regardless of cook style/mode) - just live value + the
-    // entity's own usability.
-    const setAlarmSwitch = (sel, key) => {
+    // entity's own usability. Gated on the probe actually being plugged in,
+    // same as the probe-target switch: an alarm for a probe that isn't
+    // connected obviously can't fire (the backend already no-ops on this,
+    // see coordinator._emit_lifecycle_events - this just reflects it in
+    // the UI instead of offering a control that silently does nothing).
+    const setAlarmSwitch = (sel, key, probeIdx) => {
       const el = root.querySelector(sel);
       if (!el) return;
       const rawState = this._rawState("switch", key);
       const unavailable = rawState === "unavailable" || rawState == null;
-      el.toggleAttribute("disabled", unavailable || muted);
+      const notPluggedIn = !this._bool("binary_sensor", `probe${probeIdx}_plugged_in`);
+      el.toggleAttribute("disabled", unavailable || muted || notPluggedIn);
+      el.title = notPluggedIn && !unavailable && !muted ? this._L.probe.disconnected : "";
+      const row = el.closest(".row") || el.previousElementSibling;
+      if (row) row.classList.toggle("disabled-row", unavailable || notPluggedIn);
+      const prev = el.previousElementSibling;
+      if (prev && prev.tagName === "LABEL") {
+        prev.classList.toggle("disabled-row", unavailable || notPluggedIn);
+      }
       if (el.dataset.dirty === "1") return;
       const on = this._bool("switch", key);
       if (el.checked !== on) el.checked = on;
     };
-    setAlarmSwitch("#ctl-probe1alarmen", "probe0_alarm_enabled");
-    setAlarmSwitch("#ctl-probe2alarmen", "probe1_alarm_enabled");
+    setAlarmSwitch("#ctl-probe1alarmen", "probe0_alarm_enabled", 0);
+    setAlarmSwitch("#ctl-probe2alarmen", "probe1_alarm_enabled", 1);
 
-    const setAlarmNum = (sel, key) => {
+    const setAlarmNum = (sel, key, probeIdx) => {
       const inp = root.querySelector(sel);
       if (!inp) return;
       const numberEntity = this._hassState("number", key);
       const numberUsable = this._entityUsable("number", key);
+      const notPluggedIn = !this._bool("binary_sensor", `probe${probeIdx}_plugged_in`);
       this._applyNumberLimits(inp, numberEntity);
-      inp.toggleAttribute("disabled", !numberUsable || muted);
+      inp.toggleAttribute("disabled", !numberUsable || muted || notPluggedIn);
       if (inp.dataset.dirty === "1") return;
       const live = this._num("number", key);
       if (live != null && inp.value !== String(live)) inp.value = live;
     };
-    setAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp");
-    setAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp");
+    setAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp", 0);
+    setAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp", 1);
   }
 
   // Mirror a number entity's min/max/step onto an input instead of relying on
@@ -1944,11 +1957,11 @@ class WoodfireGrillCard extends HTMLElement {
 
             </div>
             <div class="ctrl-grid" id="ctl-probes-block">
-              <label id="ctl-probe1-label" for="ctl-probe1temp">
+              <label id="ctl-probe1-label" for="ctl-probe1temp" class="target-row">
                 ${escapeHtml(fill(L.probe.target, { n: 1 }))}
                 <ha-icon id="ctl-probe1-connected" class="probe-connected-icon"></ha-icon>
               </label>
-              <div class="row">
+              <div class="row target-row">
                 <ha-switch id="ctl-probe1en" aria-label="${escapeHtml(fill(L.probe.name, { n: 1 }))}"></ha-switch>
                 <input id="ctl-probe1temp" type="number" min="30" max="110" value="60" class="num"
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 1 }))}">
@@ -1963,11 +1976,11 @@ class WoodfireGrillCard extends HTMLElement {
 
               ${presetRow(1)}
 
-              <label id="ctl-probe2-label" for="ctl-probe2temp">
+              <label id="ctl-probe2-label" for="ctl-probe2temp" class="target-row">
                 ${escapeHtml(fill(L.probe.target, { n: 2 }))}
                 <ha-icon id="ctl-probe2-connected" class="probe-connected-icon"></ha-icon>
               </label>
-              <div class="row">
+              <div class="row target-row">
                 <ha-switch id="ctl-probe2en" aria-label="${escapeHtml(fill(L.probe.name, { n: 2 }))}"></ha-switch>
                 <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num"
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 2 }))}">
@@ -2398,13 +2411,17 @@ class WoodfireGrillCard extends HTMLElement {
     const durRow = this.shadowRoot.querySelector("#ctl-dur-row");
     if (durLabel) durLabel.style.display = style === "temp" ? "none" : "";
     if (durRow) durRow.style.display = style === "temp" ? "none" : "";
-    // The probe enable+target rows stay visible either way - a probe
-    // reports its temperature regardless of cook style, and while cooking
-    // by time it still works as a plain temperature alarm (informational,
-    // same manual-setpoint call as always). Only the food/doneness presets
-    // are hidden in time style: they imply the probe is driving the cook,
-    // which it isn't here.
+    // The probe's own target/enable row only makes sense when the probe is
+    // actually driving the cook (temp style) - the dedicated alarm row
+    // (always visible, see its own render) is what covers "just watch a
+    // temperature" during a timed cook now, so showing the plain target
+    // too in time style was redundant/confusing now that both exist.
+    // Food/doneness presets are hidden in time style for the same reason:
+    // they imply the probe is driving the cook, which it isn't here.
     this.shadowRoot.querySelectorAll(".preset-row").forEach(el => {
+      el.style.display = style === "time" ? "none" : "";
+    });
+    this.shadowRoot.querySelectorAll(".target-row").forEach(el => {
       el.style.display = style === "time" ? "none" : "";
     });
   }
