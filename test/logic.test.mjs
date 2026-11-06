@@ -747,6 +747,43 @@ test("the header shows temp-based when a probe is driving the cook", () => {
   assert.ok(t.$("#header-sub").textContent.includes("Temp-based"));
 });
 
+// --- cook-by toggle: time vs. temperature (cosmetic only, same backend calls)
+
+test("the cook-by toggle defaults to time when no probe is enabled", () => {
+  const t = makeCard(ACTIVE_COOK);
+  assert.ok(t.$("#ctl-style-time").classList.contains("active"));
+  assert.ok(!t.$("#ctl-style-temp").classList.contains("active"));
+  assert.equal(t.$("#ctl-dur-row").style.display, "");
+  assert.equal(t.$("#ctl-probes-block").style.display, "none");
+});
+
+test("the cook-by toggle defaults to temperature when a probe is already enabled", () => {
+  const t = makeCard({ ...ACTIVE_COOK, "switch.probe0_enabled": "on" });
+  assert.ok(t.$("#ctl-style-temp").classList.contains("active"));
+  assert.equal(t.$("#ctl-dur-row").style.display, "none");
+  assert.equal(t.$("#ctl-probes-block").style.display, "");
+});
+
+test("clicking the cook-by toggle switches which panel half is shown", () => {
+  const t = makeCard(ACTIVE_COOK);
+  t.$("#ctl-style-temp").fire("click");
+  assert.ok(t.$("#ctl-style-temp").classList.contains("active"));
+  assert.equal(t.$("#ctl-dur-row").style.display, "none");
+  assert.equal(t.$("#ctl-probes-block").style.display, "");
+
+  t.$("#ctl-style-time").fire("click");
+  assert.ok(t.$("#ctl-style-time").classList.contains("active"));
+  assert.equal(t.$("#ctl-dur-row").style.display, "");
+  assert.equal(t.$("#ctl-probes-block").style.display, "none");
+});
+
+test("an explicit cook-by choice survives a re-render", () => {
+  const t = makeCard(ACTIVE_COOK);
+  t.$("#ctl-style-temp").fire("click");
+  t.render();
+  assert.ok(t.$("#ctl-style-temp").classList.contains("active"));
+});
+
 test("a probe with no preset selected shows a disabled doneness select", () => {
   const t = makeCard({
     ...ACTIVE_COOK,

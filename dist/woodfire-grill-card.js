@@ -200,6 +200,8 @@ const TRANSLATIONS = {
       mode: "Mode",
       heat: "Heat",
       temp: "Temp",
+      style: "Cook by",
+      styleTime: "Time", styleTemp: "Temperature (probe)",
       duration: "Duration (min)",
       smoke: "Smoke (Woodfire)",
       skipPreheat: "Skip preheat",
@@ -311,6 +313,8 @@ const TRANSLATIONS = {
       mode: "Modus",
       heat: "Hitze",
       temp: "Temp",
+      style: "Garen nach",
+      styleTime: "Zeit", styleTemp: "Temperatur (Sonde)",
       duration: "Dauer (min)",
       smoke: "Rauch (Woodfire)",
       skipPreheat: "Vorheizen \u00fcberspringen",
@@ -1538,6 +1542,7 @@ class WoodfireGrillCard extends HTMLElement {
     // Sub-renderers handle their own variant-switching and value patching.
     this._renderModeOptions();
     this._renderTempControl();
+    this._renderCookStyle();
     this._renderDurationControl();
     this._renderProbePresetSelects(0, "#ctl-probe1food", "#ctl-probe1doneness");
     this._renderProbePresetSelects(1, "#ctl-probe2food", "#ctl-probe2doneness");
@@ -1825,8 +1830,14 @@ class WoodfireGrillCard extends HTMLElement {
               <label id="ctl-temp-label">${escapeHtml(L.control.heat)}</label>
               <div id="ctl-temp-slot"></div>
 
-              <label for="ctl-dur">${escapeHtml(L.control.duration)}</label>
-              <div class="row">
+              <label>${escapeHtml(L.control.style)}</label>
+              <div class="row style-toggle" role="radiogroup" aria-label="${escapeHtml(L.control.style)}">
+                <button type="button" id="ctl-style-time" class="style-btn" role="radio">${escapeHtml(L.control.styleTime)}</button>
+                <button type="button" id="ctl-style-temp" class="style-btn" role="radio">${escapeHtml(L.control.styleTemp)}</button>
+              </div>
+
+              <label for="ctl-dur" id="ctl-dur-label">${escapeHtml(L.control.duration)}</label>
+              <div class="row" id="ctl-dur-row">
                 <input id="ctl-dur" type="range" min="1" max="720" value="30">
                 <span id="ctl-dur-badge" class="badge">30m</span>
               </div>
@@ -1837,6 +1848,8 @@ class WoodfireGrillCard extends HTMLElement {
               <label id="ctl-skip-label">${escapeHtml(L.control.skipPreheat)}</label>
               <ha-switch id="ctl-skip" aria-label="${escapeHtml(L.control.skipPreheat)}"></ha-switch>
 
+            </div>
+            <div class="ctrl-grid" id="ctl-probes-block">
               <label id="ctl-probe1-label" for="ctl-probe1temp">
                 ${escapeHtml(fill(L.probe.target, { n: 1 }))}
                 <ha-icon id="ctl-probe1-connected" class="probe-connected-icon"></ha-icon>
@@ -1947,6 +1960,15 @@ class WoodfireGrillCard extends HTMLElement {
     wirePreset("#ctl-probe1doneness", "probe0_doneness");
     wirePreset("#ctl-probe2food", "probe1_food");
     wirePreset("#ctl-probe2doneness", "probe1_doneness");
+
+    $("#ctl-style-time").addEventListener("click", () => {
+      this._cookStyle = "time";
+      this._renderCookStyle();
+    });
+    $("#ctl-style-temp").addEventListener("click", () => {
+      this._cookStyle = "temp";
+      this._renderCookStyle();
+    });
 
     $("#btn-start").addEventListener("click", () => {
       if (this._pendingAction) return;
@@ -2209,6 +2231,35 @@ class WoodfireGrillCard extends HTMLElement {
     }
   }
 
+  // Time-based and temperature-based (probe) cooking are mutually exclusive
+  // on this firmware (confirmed by the grill owner) - this toggle is purely
+  // cosmetic (which half of the settings panel is shown), the same
+  // configure_cook/select calls go out either way. Defaults to whichever
+  // style is already active (a probe enabled -> temperature), but once the
+  // user picks one explicitly that choice sticks until they pick the other.
+  _effectiveCookStyle() {
+    if (this._cookStyle) return this._cookStyle;
+    const probeActive = [0, 1].some(i => this._bool("switch", `probe${i}_enabled`));
+    return probeActive ? "temp" : "time";
+  }
+
+  _renderCookStyle() {
+    const timeBtn = this.shadowRoot.querySelector("#ctl-style-time");
+    const tempBtn = this.shadowRoot.querySelector("#ctl-style-temp");
+    if (!timeBtn || !tempBtn) return;
+    const style = this._effectiveCookStyle();
+    timeBtn.classList.toggle("active", style === "time");
+    timeBtn.setAttribute("aria-checked", style === "time");
+    tempBtn.classList.toggle("active", style === "temp");
+    tempBtn.setAttribute("aria-checked", style === "temp");
+    const durLabel = this.shadowRoot.querySelector("#ctl-dur-label");
+    const durRow = this.shadowRoot.querySelector("#ctl-dur-row");
+    const probesBlock = this.shadowRoot.querySelector("#ctl-probes-block");
+    if (durLabel) durLabel.style.display = style === "temp" ? "none" : "";
+    if (durRow) durRow.style.display = style === "temp" ? "none" : "";
+    if (probesBlock) probesBlock.style.display = style === "time" ? "none" : "";
+  }
+
   // Patch duration slider min/max in-place.
   _renderDurationControl() {
     const inp = this.shadowRoot.querySelector("#ctl-dur");
@@ -2357,6 +2408,18 @@ class WoodfireGrillCard extends HTMLElement {
       }
       .ctrl-grid label {
         font-size: 0.9em; color: var(--secondary-text-color);
+      }
+      .style-toggle { gap: 0; }
+      .style-btn {
+        flex: 1; padding: 6px 10px; font-size: 0.85em; cursor: pointer;
+        border: 1px solid var(--divider-color); background: var(--card-background-color);
+        color: var(--primary-text-color);
+      }
+      .style-btn:first-child { border-radius: 4px 0 0 4px; }
+      .style-btn:last-child { border-radius: 0 4px 4px 0; border-left: none; }
+      .style-btn.active {
+        background: var(--primary-color); color: var(--text-primary-color, #fff);
+        border-color: var(--primary-color);
       }
       .ctrl-grid select, .ctrl-grid input.num {
         padding: 6px 8px;
