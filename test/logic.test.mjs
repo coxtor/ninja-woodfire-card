@@ -737,6 +737,16 @@ test("doneness labels are translated in German, matching the app's own wording",
   assert.deepEqual(labels, ["Fast roh 1", "Fast roh 2", "Halb durchgebraten 3"]);
 });
 
+test("the header shows time-based when no probe is driving the cook", () => {
+  const t = makeCard(ACTIVE_COOK);
+  assert.ok(t.$("#header-sub").textContent.includes("Time-based"));
+});
+
+test("the header shows temp-based when a probe is driving the cook", () => {
+  const t = makeCard({ ...ACTIVE_COOK, "binary_sensor.probe0_active": "on" });
+  assert.ok(t.$("#header-sub").textContent.includes("Temp-based"));
+});
+
 test("a probe with no preset selected shows a disabled doneness select", () => {
   const t = makeCard({
     ...ACTIVE_COOK,

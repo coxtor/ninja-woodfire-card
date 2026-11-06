@@ -163,6 +163,7 @@ const TRANSLATIONS = {
       disconnected: "No connection to the grill",
       off: "Grill is asleep \u2014 tap Wake to bring it back",
       idleHint: "Put something on the grill when you start",
+      timeBased: "Time-based", tempBased: "Temp-based",
     },
     banner: {
       notLoaded: "Ninja Woodfire integration not loaded \u2014 check Settings \u2192 Devices & Services.",
@@ -273,6 +274,7 @@ const TRANSLATIONS = {
       disconnected: "Keine Verbindung zum Grill",
       off: "Grill schl\u00e4ft \u2014 auf Aufwecken tippen zum Zur\u00fcckholen",
       idleHint: "Lege etwas auf den Grill, wenn du startest",
+      timeBased: "Zeitbasiert", tempBased: "Temp-basiert",
     },
     banner: {
       notLoaded: "Ninja-Woodfire-Integration nicht geladen \u2014 Einstellungen \u2192 Ger\u00e4te & Dienste pr\u00fcfen.",
@@ -1100,6 +1102,15 @@ class WoodfireGrillCard extends HTMLElement {
     let sub = "";
     const cookModeLabel = this._L.mode[cookMode] || cookMode;
     if (isActive && cookMode) sub += escapeHtml(cookModeLabel);
+    // Temperature-controlled and time-controlled cooking are mutually
+    // exclusive on this firmware (confirmed by the grill owner): an active
+    // probe target means there is no grill timer at all, ever, regardless of
+    // what the duration field happens to show.
+    const probeDriving = [0, 1].some(i => this._bool("binary_sensor", `probe${i}_active`));
+    if (isActive) {
+      sub += sub ? " · " : "";
+      sub += escapeHtml(probeDriving ? this._L.header.tempBased : this._L.header.timeBased);
+    }
     if (isActive && setpointDisplay != null) {
       sub += sub ? " · " : "";
       // Setpoint sensor returns string ("Lo"/"Med"/"Hi") for grill mode,
