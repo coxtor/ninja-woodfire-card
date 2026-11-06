@@ -325,6 +325,46 @@ test("a cook with neither a timer nor an active probe hides the progress bar", (
   assert.equal(bar.style.display, "none");
 });
 
+test("a probe that already hit its target hides the glance progress bar, not a stale percentage", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.cook_progress": null,
+    "binary_sensor.probe0_active": "on",
+    "sensor.probe0_progress": "0",
+    "sensor.probe0_state": "get_food",
+  });
+  const bar = t.card.shadowRoot.querySelector(".progress-bar");
+  assert.equal(bar.style.display, "none");
+});
+
+test("a finished probe hides its own row's percent and bar instead of showing 0%", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "binary_sensor.probe0_active": "on",
+    "sensor.probe0_temp": { state: "42", attributes: { unit_of_measurement: "°C" } },
+    "sensor.probe0_setpoint": { state: "42", attributes: { unit_of_measurement: "°C" } },
+    "sensor.probe0_progress": "0",
+    "sensor.probe0_state": "get_food",
+  });
+  assert.ok(t.$("#probe-1 .probe-pct").hidden);
+  assert.ok(t.$("#probe-1 .probe-bar").hidden);
+});
+
+test("a cooking probe still shows its percent and bar", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "binary_sensor.probe0_active": "on",
+    "sensor.probe0_temp": { state: "30", attributes: { unit_of_measurement: "°C" } },
+    "sensor.probe0_setpoint": { state: "42", attributes: { unit_of_measurement: "°C" } },
+    "sensor.probe0_progress": "71",
+    "sensor.probe0_state": "cooking",
+  });
+  assert.ok(!t.$("#probe-1 .probe-pct").hidden);
+  assert.ok(!t.$("#probe-1 .probe-bar").hidden);
+});
+
 // --- K11: explicit device selection -----------------------------------------
 
 test("K11 a BLE grill can be selected by its bluetooth address", () => {
@@ -745,6 +785,31 @@ test("the header shows time-based when no probe is driving the cook", () => {
 test("the header shows temp-based when a probe is driving the cook", () => {
   const t = makeCard({ ...ACTIVE_COOK, "binary_sensor.probe0_active": "on" });
   assert.ok(t.$("#header-sub").textContent.includes("Temp-based"));
+});
+
+test("a probe-driven preheat shows no planned duration in the glance header", () => {
+  // Bug reported live: the glance still said "Cook 10 min" during a
+  // temp-based preheat - a probe-driven cook has no duration at all
+  // (mutual exclusivity), so showing the staged/leftover duration there
+  // is misleading.
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.grill_state": "preheat",
+    "sensor.cook_state": "preheat",
+    "sensor.cook_progress": { state: "0", attributes: { phase: "preheat" } },
+    "binary_sensor.probe0_active": "on",
+  });
+  assert.ok(!t.$("#header-sub").textContent.includes("min"));
+});
+
+test("a time-based preheat still shows the planned duration in the glance header", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.grill_state": "preheat",
+    "sensor.cook_state": "preheat",
+    "sensor.cook_progress": { state: "0", attributes: { phase: "preheat" } },
+  });
+  assert.ok(t.$("#header-sub").textContent.includes("30 min"));
 });
 
 // --- cook-by toggle: time vs. temperature (cosmetic only, same backend calls)

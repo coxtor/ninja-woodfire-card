@@ -1170,7 +1170,10 @@ class WoodfireGrillCard extends HTMLElement {
       sub += sub ? " · " : "";
       sub += `${cookProgressFromSensor}%`;
     }
-    if (isActive && inPreheat) {
+    // A probe-driven cook has no duration at all (mutual exclusivity, see
+    // above) - showing the staged/leftover duration field here during
+    // preheat would misleadingly suggest a timer that doesn't exist.
+    if (isActive && inPreheat && !probeDriving) {
       const totalMin = Math.round(totalSeconds / 60);
       if (totalMin > 0) {
         sub += sub ? " · " : "";
@@ -1248,7 +1251,7 @@ class WoodfireGrillCard extends HTMLElement {
       // coordinator.py's _real_duration_seen). Show the probe's own
       // temperature progress instead of just hiding the bar.
       const probeProgress = [0, 1]
-        .filter(i => this._bool("binary_sensor", `probe${i}_active`))
+        .filter(i => this._bool("binary_sensor", `probe${i}_active`) && !this._probeFinished(i))
         .map(i => this._num("sensor", `probe${i}_progress`))
         .filter(pct => pct != null);
       const showProbeProgress = !inPreheat && remaining == null && probeProgress.length > 0;
@@ -1485,6 +1488,16 @@ class WoodfireGrillCard extends HTMLElement {
     }
   }
 
+  // Once the firmware itself says a probe is past cooking (target hit,
+  // pending removal, resting, ...) a "X% to target" readout is stale/moot -
+  // the probe already did its job. Used to hide the bar+percent instead of
+  // a misleading number (it can otherwise be stuck at the last value, e.g.
+  // 0% if nothing ever updated it after the cook moved on).
+  _probeFinished(k) {
+    const probeState = this._state("sensor", `probe${k}_state`);
+    return probeState != null && probeState !== "none" && probeState !== "cooking";
+  }
+
   // UI labels probes 1/2; integration uses 0-indexed keys probe0_*/probe1_*.
   _renderProbe(uiIdx, connected) {
     const block = this.shadowRoot.querySelector(`#probe-${uiIdx}`);
@@ -1499,6 +1512,7 @@ class WoodfireGrillCard extends HTMLElement {
     const target = this._temp(`probe${k}_setpoint`);
     const progress = this._num("sensor", `probe${k}_progress`, 0);
     const active = this._bool("binary_sensor", `probe${k}_active`);
+    const probeFinished = this._probeFinished(k);
     const pct = Math.max(0, Math.min(100, progress));
     const color = pct >= 100 ? "#4caf50" : pct >= 80 ? "#ff9800" : "#e74c3c";
     const setText = (sel, text) => {
@@ -1518,6 +1532,10 @@ class WoodfireGrillCard extends HTMLElement {
       temp.value != null ? `${Math.round(temp.value * 10) / 10}${temp.unit}` : "—");
     block.querySelector(".probe-target-wrap").hidden = !target.value;
     setText(".probe-target", target.value ? `${target.value}${target.unit}` : "");
+    const pctEl = block.querySelector(".probe-pct");
+    const barEl = block.querySelector(".probe-bar");
+    pctEl.hidden = probeFinished;
+    barEl.hidden = probeFinished;
     setText(".probe-pct", `(${Math.round(pct)}%)`);
     const fillEl = block.querySelector(".probe-fill");
     fillEl.style.width = `${pct}%`;
@@ -1893,17 +1911,17 @@ class WoodfireGrillCard extends HTMLElement {
           </button>
           <div id="ctl-panel" class="ctl-panel" hidden>
             <div class="ctrl-grid">
-              <label for="ctl-mode">${escapeHtml(L.control.mode)}</label>
-              <select id="ctl-mode"></select>
-
-              <label id="ctl-temp-label">${escapeHtml(L.control.heat)}</label>
-              <div id="ctl-temp-slot"></div>
-
               <label>${escapeHtml(L.control.style)}</label>
               <div class="row style-toggle" role="radiogroup" aria-label="${escapeHtml(L.control.style)}">
                 <button type="button" id="ctl-style-time" class="style-btn" role="radio">${escapeHtml(L.control.styleTime)}</button>
                 <button type="button" id="ctl-style-temp" class="style-btn" role="radio">${escapeHtml(L.control.styleTemp)}</button>
               </div>
+
+              <label for="ctl-mode">${escapeHtml(L.control.mode)}</label>
+              <select id="ctl-mode"></select>
+
+              <label id="ctl-temp-label">${escapeHtml(L.control.heat)}</label>
+              <div id="ctl-temp-slot"></div>
 
               <label for="ctl-dur" id="ctl-dur-label">${escapeHtml(L.control.duration)}</label>
               <div class="row" id="ctl-dur-row">
