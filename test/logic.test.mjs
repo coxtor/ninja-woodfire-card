@@ -881,6 +881,30 @@ test("the probe's own target row is hidden while cooking by time", () => {
   assert.equal(t.$("#ctl-probe1en").closest(".row").style.display, "none");
 });
 
+test("a leftover probe target value doesn't show the glance arrow while cooking by time", () => {
+  // The target arrow is a temp-based-cooking concept, same as the settings
+  // panel's own target row above - a stale sensor.probeN_setpoint value
+  // (left over from a previous temp-based cook) must not show it here.
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "sensor.probe0_setpoint": { state: "74", attributes: { unit_of_measurement: "°C" } },
+  });
+  assert.ok(t.$("#ctl-style-time").classList.contains("active"));
+  assert.ok(t.$("#probe-1 .probe-target-wrap").hidden);
+});
+
+test("the glance target arrow shows while cooking by temperature", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "switch.probe0_enabled": "on",
+    "sensor.probe0_setpoint": { state: "74", attributes: { unit_of_measurement: "°C" } },
+  });
+  assert.ok(t.$("#ctl-style-temp").classList.contains("active"));
+  assert.ok(!t.$("#probe-1 .probe-target-wrap").hidden);
+});
+
 test("the probe's own target row shows again while cooking by temperature", () => {
   const t = makeCard({ ...ACTIVE_COOK, "binary_sensor.probe0_plugged_in": "on" });
   t.$("#ctl-style-temp").fire("click");
@@ -951,6 +975,41 @@ test("extend buttons show during a running timer and press the right button", ()
 test("extend buttons are hidden for a probe-driven cook with no timer", () => {
   const t = makeCard(ACTIVE_COOK);  // no seconds_left/end_time -> remaining is null
   assert.equal(t.$("#extend-actions").style.display, "none");
+});
+
+// --- pellet-refill reminder: bonus feature, HA-side only, Smoke-gated ---
+
+test("the pellet reminder row is hidden when Smoke is off", () => {
+  const t = makeCard({ ...ACTIVE_COOK, "switch.cook_smoke": "off" });
+  assert.equal(t.$("#ctl-pellet-interval-label").style.display, "none");
+  assert.equal(t.$("#ctl-pellet-interval").style.display, "none");
+});
+
+test("the pellet reminder row shows once Smoke is on", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.cook_smoke": "on",
+    "number.pellet_reminder_interval": { state: "45", attributes: { min: 1, max: 240, step: 1 } },
+    "number.pellet_reminder_count": { state: "0", attributes: { min: 0, max: 10, step: 1 } },
+  });
+  assert.notEqual(t.$("#ctl-pellet-interval-label").style.display, "none");
+  assert.notEqual(t.$("#ctl-pellet-interval").style.display, "none");
+});
+
+test("editing the pellet reminder interval applies immediately, not via configure_cook", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.cook_smoke": "on",
+    "number.pellet_reminder_interval": { state: "45", attributes: { min: 1, max: 240, step: 1 } },
+  });
+  const inp = t.$("#ctl-pellet-interval");
+  inp.value = "30";
+  inp.fire("change");
+  assert.equal(t.calls.length, 1);
+  assert.equal(t.calls[0].domain, "number");
+  assert.equal(t.calls[0].service, "set_value");
+  assert.equal(t.calls[0].data.entity_id, "number.woodfire_pellet_reminder_interval");
+  assert.equal(t.calls[0].data.value, 30);
 });
 
 // --- probe temperature alarm: plain HA entities, independent of the cook draft ---

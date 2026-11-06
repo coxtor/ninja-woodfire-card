@@ -206,6 +206,8 @@ const TRANSLATIONS = {
       duration: "Duration (min)",
       smoke: "Smoke (Woodfire)",
       skipPreheat: "Skip preheat",
+      pelletInterval: "Pellet reminder every (min)",
+      pelletCount: "Pellet reminder count (0 = off)",
     },
     progress: {
       preheat: "Preheating", preheatPct: "Preheating {pct}%",
@@ -320,6 +322,8 @@ const TRANSLATIONS = {
       duration: "Dauer (min)",
       smoke: "Rauch (Woodfire)",
       skipPreheat: "Vorheizen \u00fcberspringen",
+      pelletInterval: "Pellet-Erinnerung alle (Min)",
+      pelletCount: "Pellet-Erinnerung Anzahl (0 = aus)",
     },
     progress: {
       preheat: "Vorheizen", preheatPct: "Vorheizen {pct}%",
@@ -1537,8 +1541,12 @@ class WoodfireGrillCard extends HTMLElement {
     setText(".probe-preset", presetLabel);
     setText(".probe-temp",
       temp.value != null ? `${Math.round(temp.value * 10) / 10}${temp.unit}` : "—");
-    block.querySelector(".probe-target-wrap").hidden = !target.value;
-    setText(".probe-target", target.value ? `${target.value}${target.unit}` : "");
+    // The target arrow is a temp-based-cooking concept (same reasoning as
+    // hiding the settings panel's own target row in time style below) - a
+    // stale/leftover target value must not show it during a timed cook.
+    const showTarget = target.value && this._effectiveCookStyle() === "temp";
+    block.querySelector(".probe-target-wrap").hidden = !showTarget;
+    setText(".probe-target", showTarget ? `${target.value}${target.unit}` : "");
     const pctEl = block.querySelector(".probe-pct");
     const barEl = block.querySelector(".probe-bar");
     pctEl.hidden = probeFinished;
@@ -1724,6 +1732,27 @@ class WoodfireGrillCard extends HTMLElement {
     };
     setAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp", 0);
     setAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp", 1);
+
+    // Pellet-refill reminder (bonus feature, not in the vendor app): HA-side
+    // only, plain entities like the probe alarm - only relevant while Smoke
+    // is on, so the row is hidden otherwise rather than offered unusable.
+    const smokeOn = this._bool("switch", "cook_smoke");
+    const setPelletNum = (sel, key) => {
+      const inp = root.querySelector(sel);
+      if (!inp) return;
+      const numberEntity = this._hassState("number", key);
+      const numberUsable = this._entityUsable("number", key);
+      this._applyNumberLimits(inp, numberEntity);
+      inp.toggleAttribute("disabled", !numberUsable || muted);
+      if (inp.dataset.dirty === "1") return;
+      const live = this._num("number", key);
+      if (live != null && inp.value !== String(live)) inp.value = live;
+    };
+    setPelletNum("#ctl-pellet-interval", "pellet_reminder_interval");
+    setPelletNum("#ctl-pellet-count", "pellet_reminder_count");
+    root.querySelectorAll(".pellet-row").forEach(el => {
+      el.style.display = smokeOn ? "" : "none";
+    });
   }
 
   // Mirror a number entity's min/max/step onto an input instead of relying on
@@ -1952,6 +1981,14 @@ class WoodfireGrillCard extends HTMLElement {
               <label id="ctl-smoke-label">${escapeHtml(L.control.smoke)}</label>
               <ha-switch id="ctl-smoke" aria-label="${escapeHtml(L.control.smoke)}"></ha-switch>
 
+              <label id="ctl-pellet-interval-label" class="pellet-row">${escapeHtml(L.control.pelletInterval)}</label>
+              <input id="ctl-pellet-interval" class="pellet-row num" type="number" min="1" max="240" value="45"
+                     aria-label="${escapeHtml(L.control.pelletInterval)}">
+
+              <label id="ctl-pellet-count-label" class="pellet-row">${escapeHtml(L.control.pelletCount)}</label>
+              <input id="ctl-pellet-count" class="pellet-row num" type="number" min="0" max="10" value="0"
+                     aria-label="${escapeHtml(L.control.pelletCount)}">
+
               <label id="ctl-skip-label">${escapeHtml(L.control.skipPreheat)}</label>
               <ha-switch id="ctl-skip" aria-label="${escapeHtml(L.control.skipPreheat)}"></ha-switch>
 
@@ -2096,6 +2133,8 @@ class WoodfireGrillCard extends HTMLElement {
     };
     wireAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp");
     wireAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp");
+    wireAlarmNum("#ctl-pellet-interval", "pellet_reminder_interval");
+    wireAlarmNum("#ctl-pellet-count", "pellet_reminder_count");
 
     // Food/doneness presets: applied immediately, not staged - see
     // _renderProbePresetSelects for why.
