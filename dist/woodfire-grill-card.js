@@ -2469,7 +2469,11 @@ class WoodfireGrillCard extends HTMLElement {
         position: absolute; inset: 0;
         display: flex; align-items: center; justify-content: center;
         font-size: 0.85em; font-weight: 600;
-        color: var(--primary-text-color); mix-blend-mode: difference;
+        /* A plain color (even via mix-blend-mode) read as blurry/low-contrast
+           against the orange/red fill in some themes - a white label with a
+           dark outline stays legible over both the fill and the empty track. */
+        color: #fff;
+        text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.9);
       }
       .temps {
         display: grid; grid-template-columns: repeat(4, 1fr);
