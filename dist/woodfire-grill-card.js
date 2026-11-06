@@ -174,7 +174,25 @@ const TRANSLATIONS = {
     temp: { grill: "Grill", air: "Air", smoke: "Smoke", lid: "Lid" },
     diag: { backend: "Connection", local: "Local (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Serial", signal: "Signal", ble: "BLE", on: "on", off: "off" },
     lid: { open: "open", closed: "closed" },
-    probe: { name: "Probe {n}", target: "Probe {n} target" },
+    probe: {
+      name: "Probe {n}", target: "Probe {n} target",
+      food: "Probe {n} food", doneness: "Probe {n} doneness",
+    },
+    food: {
+      Manual: "Manual", Chicken: "Chicken", Beef: "Beef", Pork: "Pork",
+      Lamb: "Lamb", Fish: "Fish",
+    },
+    // Keys are the firmware's own English doneness labels (from the app's
+    // bundled probe_presets.json); English is the identity mapping.
+    doneness: {
+      "Well": "Well",
+      "Rare 1": "Rare 1", "Rare 2": "Rare 2",
+      "M. Rare 3": "M. Rare 3", "M. Rare 4": "M. Rare 4",
+      "Medium 5": "Medium 5", "Medium 6": "Medium 6",
+      "M. Well 7": "M. Well 7", "M. Well 8": "M. Well 8", "Well 9": "Well 9",
+      "Medium": "Medium", "Med Well": "Med Well",
+      "Rare": "Rare", "Med Rare": "Med Rare",
+    },
     control: {
       title: "Cook settings",
       mode: "Mode",
@@ -264,7 +282,25 @@ const TRANSLATIONS = {
     temp: { grill: "Grill", air: "Luft", smoke: "Rauch", lid: "Deckel" },
     diag: { backend: "Verbindung", local: "Lokal (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Seriennr.", signal: "Signal", ble: "BLE", on: "an", off: "aus" },
     lid: { open: "offen", closed: "zu" },
-    probe: { name: "Sonde {n}", target: "Sonde {n} Ziel" },
+    probe: {
+      name: "Sonde {n}", target: "Sonde {n} Ziel",
+      food: "Sonde {n} Lebensmittel", doneness: "Sonde {n} Garpunkt",
+    },
+    food: {
+      Manual: "Manuell", Chicken: "Hähnchen", Beef: "Rind", Pork: "Schwein",
+      Lamb: "Lamm", Fish: "Fisch",
+    },
+    // Labels confirmed live in der App (2026-11-06), nicht übersetzt geraten.
+    doneness: {
+      "Well": "Durchgebraten",
+      "Rare 1": "Fast roh 1", "Rare 2": "Fast roh 2",
+      "M. Rare 3": "Halb durchgebraten 3", "M. Rare 4": "Halb durchgebraten 4",
+      "Medium 5": "Medium 5", "Medium 6": "Medium 6",
+      "M. Well 7": "Fast durchgebraten 7", "M. Well 8": "Fast durchgebraten 8",
+      "Well 9": "Durchgebraten 9",
+      "Medium": "Medium", "Med Well": "Fast durchgebraten",
+      "Rare": "Fast roh", "Med Rare": "Halb durchgebraten",
+    },
     control: {
       title: "Kochen einstellen",
       mode: "Modus",
@@ -1464,6 +1500,8 @@ class WoodfireGrillCard extends HTMLElement {
     this._renderModeOptions();
     this._renderTempControl();
     this._renderDurationControl();
+    this._renderProbePresetSelects(0, "#ctl-probe1food", "#ctl-probe1doneness");
+    this._renderProbePresetSelects(1, "#ctl-probe2food", "#ctl-probe2doneness");
 
     const muted = this._valuesMuted();
     const setSwitch = (sel, key) => {
@@ -1750,11 +1788,23 @@ class WoodfireGrillCard extends HTMLElement {
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 1 }))}">
               </div>
 
+              <label for="ctl-probe1food">${escapeHtml(fill(L.probe.food, { n: 1 }))}</label>
+              <div class="row">
+                <select id="ctl-probe1food" aria-label="${escapeHtml(fill(L.probe.food, { n: 1 }))}"></select>
+                <select id="ctl-probe1doneness" aria-label="${escapeHtml(fill(L.probe.doneness, { n: 1 }))}"></select>
+              </div>
+
               <label id="ctl-probe2-label" for="ctl-probe2temp">${escapeHtml(fill(L.probe.target, { n: 2 }))}</label>
               <div class="row">
                 <ha-switch id="ctl-probe2en" aria-label="${escapeHtml(fill(L.probe.name, { n: 2 }))}"></ha-switch>
                 <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num"
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 2 }))}">
+              </div>
+
+              <label for="ctl-probe2food">${escapeHtml(fill(L.probe.food, { n: 2 }))}</label>
+              <div class="row">
+                <select id="ctl-probe2food" aria-label="${escapeHtml(fill(L.probe.food, { n: 2 }))}"></select>
+                <select id="ctl-probe2doneness" aria-label="${escapeHtml(fill(L.probe.doneness, { n: 2 }))}"></select>
               </div>
             </div>
           </div>
@@ -1826,6 +1876,22 @@ class WoodfireGrillCard extends HTMLElement {
     };
     wireNum("#ctl-probe1temp", "probe0_target_temp");
     wireNum("#ctl-probe2temp", "probe1_target_temp");
+
+    // Food/doneness presets: applied immediately, not staged - see
+    // _renderProbePresetSelects for why.
+    const wirePreset = (sel, key) => {
+      const el = $(sel);
+      el.addEventListener("change", e => {
+        markDirty(el);
+        const eid = this._findEntity("select", key);
+        if (eid) this._call("select", "select_option", { entity_id: eid, option: e.target.value });
+        setTimeout(() => clearDirty(el), 2000);
+      });
+    };
+    wirePreset("#ctl-probe1food", "probe0_food");
+    wirePreset("#ctl-probe1doneness", "probe0_doneness");
+    wirePreset("#ctl-probe2food", "probe1_food");
+    wirePreset("#ctl-probe2doneness", "probe1_doneness");
 
     $("#btn-start").addEventListener("click", () => {
       if (this._pendingAction) return;
@@ -2026,6 +2092,51 @@ class WoodfireGrillCard extends HTMLElement {
 
     if ((staged !== undefined || sel.dataset.dirty !== "1") && current && sel.value !== current) {
       sel.value = current;
+    }
+  }
+
+  // Food/doneness presets apply immediately (not staged via Apply/Cancel,
+  // unlike the rest of the cook-config controls): picking a preset is one
+  // complete action, not a partial edit of a multi-field draft, and the
+  // integration's atomic configure_cook service has no field for it (the
+  // grill's own protocol has no concept of a preset either - this only ever
+  // resolves to the same plain °C target the manual number entity sends).
+  // Doneness labels ("Rare 1", "M. Well 7", ...) are shown as the firmware's
+  // own English wording; translating every level of every food is not done
+  // yet.
+  _renderProbePresetSelects(idx, foodSelector, donenessSelector) {
+    const foodKey = `probe${idx}_food`;
+    const doneKey = `probe${idx}_doneness`;
+    const foodSel = this.shadowRoot.querySelector(foodSelector);
+    const doneSel = this.shadowRoot.querySelector(donenessSelector);
+    if (!foodSel || !doneSel) return;
+
+    const patchOptions = (sel, opts, labelFor) => {
+      const have = Array.from(sel.options).map(o => o.value);
+      const same = have.length === opts.length && have.every((v, i) => v === opts[i]);
+      if (!same) {
+        sel.innerHTML = opts
+          .map(o => `<option value="${escapeHtml(o)}">${escapeHtml(labelFor(o))}</option>`)
+          .join("");
+      }
+    };
+
+    const foodOpts = this._attr("select", foodKey, "options") || [];
+    patchOptions(foodSel, foodOpts, o => this._L.food[o] || o);
+    const foodUsable = this._entityUsable("select", foodKey);
+    foodSel.toggleAttribute("disabled", !foodUsable);
+    const foodCurrent = this._state("select", foodKey);
+    if (foodSel.dataset.dirty !== "1" && foodCurrent && foodSel.value !== foodCurrent) {
+      foodSel.value = foodCurrent;
+    }
+
+    const doneOpts = this._attr("select", doneKey, "options") || [];
+    patchOptions(doneSel, doneOpts, o => this._L.doneness[o] || o);
+    const doneUsable = this._entityUsable("select", doneKey);
+    doneSel.toggleAttribute("disabled", !doneUsable);
+    const doneCurrent = this._state("select", doneKey);
+    if (doneSel.dataset.dirty !== "1" && doneCurrent && doneSel.value !== doneCurrent) {
+      doneSel.value = doneCurrent;
     }
   }
 

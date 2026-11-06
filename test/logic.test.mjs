@@ -663,6 +663,63 @@ test("a stale beacon while idle shows no connection hint", () => {
   assert.equal(t.$("#advisory").style.display, "none");
 });
 
+// --- probe food/doneness presets ---------------------------------------------
+
+test("selecting a food preset sends select.select_option immediately", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "select.probe0_food": { state: "Manual", attributes: { options: ["Manual", "Beef", "Fish"] } },
+    "select.probe0_doneness": { state: "—", attributes: { options: ["—"] } },
+  });
+  const sel = t.$("#ctl-probe1food");
+  assert.deepEqual(
+    Array.from(sel.options).map(o => o.value), ["Manual", "Beef", "Fish"]
+  );
+  sel.value = "Beef";
+  sel.fire("change");
+  const call = t.calls.find(c => c.service === "select_option" && c.data.option === "Beef");
+  assert.ok(call, "select_option called with Beef");
+  assert.equal(call.data.entity_id, "select.woodfire_probe0_food");
+});
+
+test("the doneness select follows the food's own dynamic options", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef", "Fish"] } },
+    "select.probe0_doneness": {
+      state: "Rare 2",
+      attributes: { options: ["Rare 1", "Rare 2", "Medium 5"] },
+    },
+  });
+  const sel = t.$("#ctl-probe1doneness");
+  assert.deepEqual(
+    Array.from(sel.options).map(o => o.value), ["Rare 1", "Rare 2", "Medium 5"]
+  );
+  assert.equal(sel.value, "Rare 2");
+});
+
+test("doneness labels are translated in German, matching the app's own wording", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef"] } },
+    "select.probe0_doneness": {
+      state: "Rare 2",
+      attributes: { options: ["Rare 1", "Rare 2", "M. Rare 3"] },
+    },
+  }, { language: "de" });
+  const sel = t.$("#ctl-probe1doneness");
+  const labels = Array.from(sel.options).map(o => o.textContent);
+  assert.deepEqual(labels, ["Fast roh 1", "Fast roh 2", "Halb durchgebraten 3"]);
+});
+
+test("a probe with no preset selected shows a disabled doneness select", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "select.probe0_food": { state: "Manual", attributes: { options: ["Manual", "Beef"] } },
+    "select.probe0_doneness": { state: "unavailable", attributes: { options: ["—"] } },
+  });
+  assert.ok(t.$("#ctl-probe1doneness").hasAttribute("disabled"));
+});
 
 // --- R1: the seconds_left fallback holds its value across a pause ------------
 
