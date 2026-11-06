@@ -1749,8 +1749,8 @@ class WoodfireGrillCard extends HTMLElement {
     const L = this._L;
     const showPresets = this._config.show_probe_presets !== false;
     const presetRow = (idx) => !showPresets ? "" : `
-              <label for="ctl-probe${idx}food">${escapeHtml(fill(L.probe.food, { n: idx }))}</label>
-              <div class="row">
+              <label for="ctl-probe${idx}food" id="ctl-probe${idx}food-label" class="preset-row">${escapeHtml(fill(L.probe.food, { n: idx }))}</label>
+              <div class="row preset-row" id="ctl-probe${idx}food-row">
                 <select id="ctl-probe${idx}food" aria-label="${escapeHtml(fill(L.probe.food, { n: idx }))}"></select>
                 <select id="ctl-probe${idx}doneness" aria-label="${escapeHtml(fill(L.probe.doneness, { n: idx }))}"></select>
               </div>`;
@@ -2254,10 +2254,17 @@ class WoodfireGrillCard extends HTMLElement {
     tempBtn.setAttribute("aria-checked", style === "temp");
     const durLabel = this.shadowRoot.querySelector("#ctl-dur-label");
     const durRow = this.shadowRoot.querySelector("#ctl-dur-row");
-    const probesBlock = this.shadowRoot.querySelector("#ctl-probes-block");
     if (durLabel) durLabel.style.display = style === "temp" ? "none" : "";
     if (durRow) durRow.style.display = style === "temp" ? "none" : "";
-    if (probesBlock) probesBlock.style.display = style === "time" ? "none" : "";
+    // The probe enable+target rows stay visible either way - a probe
+    // reports its temperature regardless of cook style, and while cooking
+    // by time it still works as a plain temperature alarm (informational,
+    // same manual-setpoint call as always). Only the food/doneness presets
+    // are hidden in time style: they imply the probe is driving the cook,
+    // which it isn't here.
+    this.shadowRoot.querySelectorAll(".preset-row").forEach(el => {
+      el.style.display = style === "time" ? "none" : "";
+    });
   }
 
   // Patch duration slider min/max in-place.
