@@ -177,6 +177,7 @@ const TRANSLATIONS = {
     probe: {
       name: "Probe {n}", target: "Probe {n} target",
       food: "Probe {n} food", doneness: "Probe {n} doneness",
+      connected: "Probe plugged in", disconnected: "Probe not plugged in",
     },
     food: {
       Manual: "Manual", Chicken: "Chicken", Beef: "Beef", Pork: "Pork",
@@ -285,6 +286,7 @@ const TRANSLATIONS = {
     probe: {
       name: "Sonde {n}", target: "Sonde {n} Ziel",
       food: "Sonde {n} Lebensmittel", doneness: "Sonde {n} Garpunkt",
+      connected: "Sonde eingesteckt", disconnected: "Sonde nicht eingesteckt",
     },
     food: {
       Manual: "Manuell", Chicken: "Hähnchen", Beef: "Rind", Pork: "Schwein",
@@ -1788,7 +1790,10 @@ class WoodfireGrillCard extends HTMLElement {
               <label id="ctl-skip-label">${escapeHtml(L.control.skipPreheat)}</label>
               <ha-switch id="ctl-skip" aria-label="${escapeHtml(L.control.skipPreheat)}"></ha-switch>
 
-              <label id="ctl-probe1-label" for="ctl-probe1temp">${escapeHtml(fill(L.probe.target, { n: 1 }))}</label>
+              <label id="ctl-probe1-label" for="ctl-probe1temp">
+                ${escapeHtml(fill(L.probe.target, { n: 1 }))}
+                <ha-icon id="ctl-probe1-connected" class="probe-connected-icon"></ha-icon>
+              </label>
               <div class="row">
                 <ha-switch id="ctl-probe1en" aria-label="${escapeHtml(fill(L.probe.name, { n: 1 }))}"></ha-switch>
                 <input id="ctl-probe1temp" type="number" min="30" max="110" value="60" class="num"
@@ -1797,7 +1802,10 @@ class WoodfireGrillCard extends HTMLElement {
 
               ${presetRow(1)}
 
-              <label id="ctl-probe2-label" for="ctl-probe2temp">${escapeHtml(fill(L.probe.target, { n: 2 }))}</label>
+              <label id="ctl-probe2-label" for="ctl-probe2temp">
+                ${escapeHtml(fill(L.probe.target, { n: 2 }))}
+                <ha-icon id="ctl-probe2-connected" class="probe-connected-icon"></ha-icon>
+              </label>
               <div class="row">
                 <ha-switch id="ctl-probe2en" aria-label="${escapeHtml(fill(L.probe.name, { n: 2 }))}"></ha-switch>
                 <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num"
@@ -2121,10 +2129,16 @@ class WoodfireGrillCard extends HTMLElement {
       }
     };
 
+    // The preset only writes the plain °C target (see the class comment) -
+    // same as the manual number entity, that target is inert until the
+    // probe's own enable switch turns it on. Gating the select on it too
+    // avoids the impression that picking a preset alone starts monitoring.
+    const probeEnabled = this._state("switch", `probe${idx}_enabled`) === "on";
+
     const foodOpts = this._attr("select", foodKey, "options") || [];
     patchOptions(foodSel, foodOpts, o => this._L.food[o] || o);
     const foodUsable = this._entityUsable("select", foodKey);
-    foodSel.toggleAttribute("disabled", !foodUsable);
+    foodSel.toggleAttribute("disabled", !foodUsable || !probeEnabled);
     const foodCurrent = this._state("select", foodKey);
     if (foodSel.dataset.dirty !== "1" && foodCurrent && foodSel.value !== foodCurrent) {
       foodSel.value = foodCurrent;
@@ -2133,10 +2147,18 @@ class WoodfireGrillCard extends HTMLElement {
     const doneOpts = this._attr("select", doneKey, "options") || [];
     patchOptions(doneSel, doneOpts, o => this._L.doneness[o] || o);
     const doneUsable = this._entityUsable("select", doneKey);
-    doneSel.toggleAttribute("disabled", !doneUsable);
+    doneSel.toggleAttribute("disabled", !doneUsable || !probeEnabled);
     const doneCurrent = this._state("select", doneKey);
     if (doneSel.dataset.dirty !== "1" && doneCurrent && doneSel.value !== doneCurrent) {
       doneSel.value = doneCurrent;
+    }
+
+    const connectedIcon = this.shadowRoot.querySelector(`#ctl-probe${idx + 1}-connected`);
+    if (connectedIcon) {
+      const plugged = this._state("binary_sensor", `probe${idx}_plugged_in`) === "on";
+      connectedIcon.setAttribute("icon", plugged ? "mdi:thermometer-check" : "mdi:thermometer-off");
+      connectedIcon.classList.toggle("is-connected", plugged);
+      connectedIcon.title = plugged ? this._L.probe.connected : this._L.probe.disconnected;
     }
   }
 
@@ -2164,6 +2186,13 @@ class WoodfireGrillCard extends HTMLElement {
   _styles() {
     return `
       :host { display: block; }
+      .probe-connected-icon {
+        --mdc-icon-size: 16px;
+        margin-left: 4px;
+        vertical-align: middle;
+        color: var(--secondary-text-color);
+      }
+      .probe-connected-icon.is-connected { color: var(--success-color, #43a047); }
       ha-card { padding: 0; overflow: hidden; }
       .header {
         display: flex; align-items: center; gap: 16px;

@@ -668,6 +668,7 @@ test("a stale beacon while idle shows no connection hint", () => {
 test("selecting a food preset sends select.select_option immediately", () => {
   const t = makeCard({
     ...ACTIVE_COOK,
+    "switch.probe0_enabled": "on",
     "select.probe0_food": { state: "Manual", attributes: { options: ["Manual", "Beef", "Fish"] } },
     "select.probe0_doneness": { state: "—", attributes: { options: ["—"] } },
   });
@@ -719,6 +720,40 @@ test("a probe with no preset selected shows a disabled doneness select", () => {
     "select.probe0_doneness": { state: "unavailable", attributes: { options: ["—"] } },
   });
   assert.ok(t.$("#ctl-probe1doneness").hasAttribute("disabled"));
+});
+
+test("the preset selects are disabled while the probe's target is off", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.probe0_enabled": "off",
+    "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef"] } },
+    "select.probe0_doneness": { state: "Rare 1", attributes: { options: ["Rare 1"] } },
+  });
+  assert.ok(t.$("#ctl-probe1food").hasAttribute("disabled"));
+  assert.ok(t.$("#ctl-probe1doneness").hasAttribute("disabled"));
+});
+
+test("the preset selects become usable once the probe's target is on", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.probe0_enabled": "on",
+    "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef"] } },
+    "select.probe0_doneness": { state: "Rare 1", attributes: { options: ["Rare 1"] } },
+  });
+  assert.ok(!t.$("#ctl-probe1food").hasAttribute("disabled"));
+  assert.ok(!t.$("#ctl-probe1doneness").hasAttribute("disabled"));
+});
+
+test("the connected icon reflects whether the probe is plugged in", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "binary_sensor.probe1_plugged_in": "off",
+  });
+  assert.equal(t.$("#ctl-probe1-connected").getAttribute("icon"), "mdi:thermometer-check");
+  assert.ok(t.$("#ctl-probe1-connected").classList.contains("is-connected"));
+  assert.equal(t.$("#ctl-probe2-connected").getAttribute("icon"), "mdi:thermometer-off");
+  assert.ok(!t.$("#ctl-probe2-connected").classList.contains("is-connected"));
 });
 
 test("show_probe_presets: false hides the preset selects from the card", () => {
