@@ -177,6 +177,7 @@ const TRANSLATIONS = {
     lid: { open: "open", closed: "closed" },
     probe: {
       name: "Probe {n}", target: "Probe {n} target",
+      alarm: "Probe {n} alarm",
       food: "Probe {n} food", doneness: "Probe {n} doneness",
       connected: "Probe plugged in", disconnected: "Probe not plugged in",
     },
@@ -290,6 +291,7 @@ const TRANSLATIONS = {
     lid: { open: "offen", closed: "zu" },
     probe: {
       name: "Sonde {n}", target: "Sonde {n} Ziel",
+      alarm: "Sonde {n} Alarm",
       food: "Sonde {n} Lebensmittel", doneness: "Sonde {n} Garpunkt",
       connected: "Sonde eingesteckt", disconnected: "Sonde nicht eingesteckt",
     },
@@ -899,6 +901,36 @@ class WoodfireGrillCard extends HTMLElement {
     if (!eid) return;
     this._stageOrApply(key, on, true,
       () => this._call("switch", on ? "turn_on" : "turn_off", { entity_id: eid }));
+  }
+
+  // The probe alarm isn't a configure_cook field - it's a plain HA-side
+  // switch/number, so it always applies right away instead of joining the
+  // cook draft (which would misfire: CONFIGURE_FIELDS has no entry for it).
+  _setAlarmSwitch(key, on) {
+    const eid = this._findEntity("switch", key);
+    if (!eid) return;
+    this._call("switch", on ? "turn_on" : "turn_off", { entity_id: eid });
+  }
+
+  _setAlarmNumber(el, key) {
+    const eid = this._findEntity("number", key);
+    if (!eid || !this._entityUsable("number", key)) return false;
+    const value = el.value;
+    if (value === "" || value == null) return false;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return false;
+    const a = this._hassState("number", key)?.attributes || {};
+    const min = Number(a.min);
+    const max = Number(a.max);
+    const step = Number(a.step);
+    if (Number.isFinite(min) && num < min) return false;
+    if (Number.isFinite(max) && num > max) return false;
+    if (Number.isFinite(step) && step > 0) {
+      const steps = (num - (Number.isFinite(min) ? min : 0)) / step;
+      if (Math.abs(steps - Math.round(steps)) > 1e-6) return false;
+    }
+    this._call("number", "set_value", { entity_id: eid, value: num });
+    return true;
   }
 
   // Send the whole draft as one `configure_cook` command so the settings can't
@@ -1624,6 +1656,36 @@ class WoodfireGrillCard extends HTMLElement {
     };
     setProbeTemp("#ctl-probe1temp", "probe0_enabled", "probe0_target_temp");
     setProbeTemp("#ctl-probe2temp", "probe1_enabled", "probe1_target_temp");
+
+    // Alarm controls: plain HA entities, no staging and no mode-availability
+    // gating (works regardless of cook style/mode) - just live value + the
+    // entity's own usability.
+    const setAlarmSwitch = (sel, key) => {
+      const el = root.querySelector(sel);
+      if (!el) return;
+      const rawState = this._rawState("switch", key);
+      const unavailable = rawState === "unavailable" || rawState == null;
+      el.toggleAttribute("disabled", unavailable || muted);
+      if (el.dataset.dirty === "1") return;
+      const on = this._bool("switch", key);
+      if (el.checked !== on) el.checked = on;
+    };
+    setAlarmSwitch("#ctl-probe1alarmen", "probe0_alarm_enabled");
+    setAlarmSwitch("#ctl-probe2alarmen", "probe1_alarm_enabled");
+
+    const setAlarmNum = (sel, key) => {
+      const inp = root.querySelector(sel);
+      if (!inp) return;
+      const numberEntity = this._hassState("number", key);
+      const numberUsable = this._entityUsable("number", key);
+      this._applyNumberLimits(inp, numberEntity);
+      inp.toggleAttribute("disabled", !numberUsable || muted);
+      if (inp.dataset.dirty === "1") return;
+      const live = this._num("number", key);
+      if (live != null && inp.value !== String(live)) inp.value = live;
+    };
+    setAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp");
+    setAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp");
   }
 
   // Mirror a number entity's min/max/step onto an input instead of relying on
@@ -1867,6 +1929,13 @@ class WoodfireGrillCard extends HTMLElement {
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 1 }))}">
               </div>
 
+              <label id="ctl-probe1alarm-label" for="ctl-probe1alarmtemp">${escapeHtml(fill(L.probe.alarm, { n: 1 }))}</label>
+              <div class="row">
+                <ha-switch id="ctl-probe1alarmen" aria-label="${escapeHtml(fill(L.probe.alarm, { n: 1 }))}"></ha-switch>
+                <input id="ctl-probe1alarmtemp" type="number" min="30" max="110" value="60" class="num"
+                       aria-label="${escapeHtml(fill(L.probe.alarm, { n: 1 }))}">
+              </div>
+
               ${presetRow(1)}
 
               <label id="ctl-probe2-label" for="ctl-probe2temp">
@@ -1877,6 +1946,13 @@ class WoodfireGrillCard extends HTMLElement {
                 <ha-switch id="ctl-probe2en" aria-label="${escapeHtml(fill(L.probe.name, { n: 2 }))}"></ha-switch>
                 <input id="ctl-probe2temp" type="number" min="30" max="110" value="60" class="num"
                        aria-label="${escapeHtml(fill(L.probe.target, { n: 2 }))}">
+              </div>
+
+              <label id="ctl-probe2alarm-label" for="ctl-probe2alarmtemp">${escapeHtml(fill(L.probe.alarm, { n: 2 }))}</label>
+              <div class="row">
+                <ha-switch id="ctl-probe2alarmen" aria-label="${escapeHtml(fill(L.probe.alarm, { n: 2 }))}"></ha-switch>
+                <input id="ctl-probe2alarmtemp" type="number" min="30" max="110" value="60" class="num"
+                       aria-label="${escapeHtml(fill(L.probe.alarm, { n: 2 }))}">
               </div>
 
               ${presetRow(2)}
@@ -1954,6 +2030,34 @@ class WoodfireGrillCard extends HTMLElement {
     };
     wireNum("#ctl-probe1temp", "probe0_target_temp");
     wireNum("#ctl-probe2temp", "probe1_target_temp");
+
+    // The alarm is a plain HA-side feature, independent of the cook draft
+    // (not a configure_cook field) - it always applies immediately, even
+    // mid-cook, instead of going through the stage/Apply flow.
+    const wireAlarmSwitch = (sel, key) => {
+      const el = $(sel);
+      el.addEventListener("change", () => {
+        markDirty(el);
+        this._setAlarmSwitch(key, el.checked);
+        setTimeout(() => clearDirty(el), 2000);
+      });
+    };
+    wireAlarmSwitch("#ctl-probe1alarmen", "probe0_alarm_enabled");
+    wireAlarmSwitch("#ctl-probe2alarmen", "probe1_alarm_enabled");
+
+    const wireAlarmNum = (sel, key) => {
+      const el = $(sel);
+      el.addEventListener("input", () => markDirty(el));
+      el.addEventListener("change", e => {
+        const valid = typeof e.target.checkValidity !== "function" || e.target.checkValidity();
+        const ok = valid && this._setAlarmNumber(e.target, key);
+        if (!ok) { e.target.setAttribute("aria-invalid", "true"); return; }
+        e.target.removeAttribute("aria-invalid");
+        setTimeout(() => { if (e.target) delete e.target.dataset.dirty; }, 2000);
+      });
+    };
+    wireAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp");
+    wireAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp");
 
     // Food/doneness presets: applied immediately, not staged - see
     // _renderProbePresetSelects for why.

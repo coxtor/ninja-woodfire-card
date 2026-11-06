@@ -816,6 +816,51 @@ test("extend buttons are hidden for a probe-driven cook with no timer", () => {
   assert.equal(t.$("#extend-actions").style.display, "none");
 });
 
+// --- probe temperature alarm: plain HA entities, independent of the cook draft ---
+
+test("flipping the alarm switch applies immediately, even mid-cook", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.probe0_alarm_enabled": "off",
+    "number.probe0_alarm_temp": { state: "60", attributes: { min: 30, max: 110, step: 1 } },
+  });
+  t.$("#ctl-probe1alarmen").checked = true;
+  t.$("#ctl-probe1alarmen").fire("change");
+  assert.equal(t.calls.length, 1);
+  assert.equal(t.calls[0].domain, "switch");
+  assert.equal(t.calls[0].service, "turn_on");
+  assert.equal(t.calls[0].data.entity_id, "switch.woodfire_probe0_alarm_enabled");
+});
+
+test("editing the alarm temperature applies immediately, not via configure_cook", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.probe0_alarm_enabled": "on",
+    "number.probe0_alarm_temp": { state: "60", attributes: { min: 30, max: 110, step: 1 } },
+  });
+  const inp = t.$("#ctl-probe1alarmtemp");
+  inp.value = "75";
+  inp.fire("change");
+  assert.equal(t.calls.length, 1);
+  assert.equal(t.calls[0].domain, "number");
+  assert.equal(t.calls[0].service, "set_value");
+  assert.equal(t.calls[0].data.entity_id, "number.woodfire_probe0_alarm_temp");
+  assert.equal(t.calls[0].data.value, 75);
+});
+
+test("the alarm temp input rejects a value outside its own min/max", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.probe0_alarm_enabled": "on",
+    "number.probe0_alarm_temp": { state: "60", attributes: { min: 30, max: 110, step: 1 } },
+  });
+  const inp = t.$("#ctl-probe1alarmtemp");
+  inp.value = "999";
+  inp.fire("change");
+  assert.equal(t.calls.length, 0);
+  assert.equal(inp.getAttribute("aria-invalid"), "true");
+});
+
 test("a probe with no preset selected shows a disabled doneness select", () => {
   const t = makeCard({
     ...ACTIVE_COOK,
