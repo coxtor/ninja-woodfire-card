@@ -13,6 +13,10 @@
 Compact Lovelace card for the Ninja Woodfire Home Assistant integration —
 live state, temperatures, probes, and one-tap controls on a single tile.
 
+<p align="center">
+  <img src="assets/woodfire-card-screenshot.png" width="360" alt="Ninja Woodfire Grill Card showing a time-based cook with the settings panel open">
+</p>
+
 ## Features
 
 - Live grill / air / smoke temperature with stale-reading filter
