@@ -776,6 +776,25 @@ test("a plugged-in probe's enable toggle stays usable", () => {
   assert.equal(sw.title, "");
 });
 
+test("the active preset shows next to the probe name during a cook", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "select.probe0_food": { state: "Beef", attributes: { options: ["Manual", "Beef"] } },
+    "select.probe0_doneness": { state: "Medium 6", attributes: { options: ["Medium 6"] } },
+  });
+  assert.equal(t.$("#probe-1 .probe-preset").textContent, " · Beef, Medium 6");
+});
+
+test("a probe left on Manual shows no preset label", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+    "select.probe0_food": { state: "Manual", attributes: { options: ["Manual", "Beef"] } },
+  });
+  assert.equal(t.$("#probe-1 .probe-preset").textContent, "");
+});
+
 test("show_probe_presets: false hides the preset selects from the card", () => {
   const t = makeCard(
     {

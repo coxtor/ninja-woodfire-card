@@ -1434,6 +1434,14 @@ class WoodfireGrillCard extends HTMLElement {
       if (el.textContent !== text) el.textContent = text;
     };
     block.querySelector(".dot").style.display = active ? "" : "none";
+    // At-a-glance preset label next to the name, so the active food/doneness
+    // is visible during a cook without opening the settings panel below.
+    const food = this._state("select", `probe${k}_food`);
+    const doneness = this._state("select", `probe${k}_doneness`);
+    const presetLabel = food && food !== "Manual"
+      ? ` · ${this._L.food[food] || food}${doneness ? `, ${this._L.doneness[doneness] || doneness}` : ""}`
+      : "";
+    setText(".probe-preset", presetLabel);
     setText(".probe-temp",
       temp.value != null ? `${Math.round(temp.value * 10) / 10}${temp.unit}` : "—");
     block.querySelector(".probe-target-wrap").hidden = !target.value;
@@ -1760,7 +1768,7 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-1" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">${escapeHtml(fill(L.probe.name, { n: 1 }))}<span class="dot" style="display:none"></span></div>
+            <div class="probe-name">${escapeHtml(fill(L.probe.name, { n: 1 }))}<span class="probe-preset"></span><span class="dot" style="display:none"></span></div>
             <div class="probe-stats"><span class="probe-temp">—</span><span class="probe-target-wrap" hidden> → <strong class="probe-target"></strong></span> <span class="probe-pct"></span></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
@@ -1768,7 +1776,7 @@ class WoodfireGrillCard extends HTMLElement {
         <div id="probe-2" class="probe" style="display:none">
           <ha-icon icon="mdi:thermometer-probe" style="--mdc-icon-size:24px"></ha-icon>
           <div class="probe-text">
-            <div class="probe-name">${escapeHtml(fill(L.probe.name, { n: 2 }))}<span class="dot" style="display:none"></span></div>
+            <div class="probe-name">${escapeHtml(fill(L.probe.name, { n: 2 }))}<span class="probe-preset"></span><span class="dot" style="display:none"></span></div>
             <div class="probe-stats"><span class="probe-temp">—</span><span class="probe-target-wrap" hidden> → <strong class="probe-target"></strong></span> <span class="probe-pct"></span></div>
           </div>
           <div class="probe-bar"><div class="probe-fill"></div></div>
@@ -2260,6 +2268,7 @@ class WoodfireGrillCard extends HTMLElement {
         gap: 12px; align-items: center; padding: 8px 16px;
       }
       .probe-name { font-weight: 500; display: flex; align-items: center; gap: 6px; }
+      .probe-preset { font-weight: 400; color: var(--secondary-text-color); font-size: 0.9em; }
       .dot {
         display: inline-block; width: 8px; height: 8px;
         border-radius: 50%; background: #e74c3c;
