@@ -171,7 +171,7 @@ const TRANSLATIONS = {
       unreachableShort: "Grill unreachable",
     },
     pending: { start: "Starting\u2026", power: "Waking\u2026", stop: "Stopping\u2026", skip: "Skipping\u2026" },
-    button: { power: "Wake", noConnection: "No connection", start: "Start", stop: "Stop", skip: "Skip preheat", apply: "Apply changes", cancel: "Cancel" },
+    button: { power: "Wake", noConnection: "No connection", start: "Start", stop: "Stop", skip: "Skip preheat", apply: "Apply changes", cancel: "Cancel", extend1: "+1 min", extend5: "+5 min" },
     temp: { grill: "Grill", air: "Air", smoke: "Smoke", lid: "Lid" },
     diag: { backend: "Connection", local: "Local (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Serial", signal: "Signal", ble: "BLE", on: "on", off: "off" },
     lid: { open: "open", closed: "closed" },
@@ -284,7 +284,7 @@ const TRANSLATIONS = {
       unreachableShort: "Grill nicht erreichbar",
     },
     pending: { start: "Startet\u2026", power: "Aufwecken\u2026", stop: "Stoppt\u2026", skip: "\u00dcberspringe\u2026" },
-    button: { power: "Aufwecken", noConnection: "Keine Verbindung", start: "Start", stop: "Stopp", skip: "Vorheizen \u00fcberspringen", apply: "\u00dcbernehmen", cancel: "Abbrechen" },
+    button: { power: "Aufwecken", noConnection: "Keine Verbindung", start: "Start", stop: "Stopp", skip: "Vorheizen \u00fcberspringen", apply: "\u00dcbernehmen", cancel: "Abbrechen", extend1: "+1 Min", extend5: "+5 Min" },
     temp: { grill: "Grill", air: "Luft", smoke: "Rauch", lid: "Deckel" },
     diag: { backend: "Verbindung", local: "Lokal (BLE)", cloud: "Cloud", firmware: "Firmware", dsn: "Seriennr.", signal: "Signal", ble: "BLE", on: "an", off: "aus" },
     lid: { open: "offen", closed: "zu" },
@@ -1397,6 +1397,13 @@ class WoodfireGrillCard extends HTMLElement {
         });
       }
     }
+    // Extending makes sense only for an actual running timer - a probe-driven
+    // cook has none to extend (see the "cook by" toggle / timerless_probe_cook
+    // in the integration), and there's nothing to extend before a cook starts.
+    const extendActions = this.shadowRoot.querySelector("#extend-actions");
+    if (extendActions) {
+      extendActions.style.display = (isActive && !showAsPower && remaining != null) ? "" : "none";
+    }
     // While any action is pending, disable the other action buttons so the
     // user can't fire a different command on top. Stop is exempt — it is the
     // way out of a command that never landed.
@@ -1887,6 +1894,10 @@ class WoodfireGrillCard extends HTMLElement {
           <button id="btn-cancel" class="btn btn-stop" style="display:none"><ha-icon icon="mdi:close"></ha-icon> ${escapeHtml(L.button.cancel)}</button>
           <button id="btn-confirm" class="btn btn-start" style="display:none"><ha-icon icon="mdi:check"></ha-icon> ${escapeHtml(L.button.apply)}</button>
         </div>
+        <div class="actions actions-secondary" id="extend-actions" style="display:none">
+          <button id="btn-extend1" class="btn btn-extend"><ha-icon icon="mdi:timer-plus"></ha-icon> ${escapeHtml(L.button.extend1)}</button>
+          <button id="btn-extend5" class="btn btn-extend"><ha-icon icon="mdi:timer-plus"></ha-icon> ${escapeHtml(L.button.extend5)}</button>
+        </div>
         <div id="diag" class="diag" style="display:none"></div>
       </ha-card>
     `;
@@ -2010,6 +2021,8 @@ class WoodfireGrillCard extends HTMLElement {
     });
     $("#btn-confirm").addEventListener("click", () => this._applyStaged());
     $("#btn-cancel").addEventListener("click", () => this._cancelStaged());
+    $("#btn-extend1").addEventListener("click", () => this._press("extend_cook_1min"));
+    $("#btn-extend5").addEventListener("click", () => this._press("extend_cook_5min"));
 
     // Manual toggle for the cook-config panel. Replaces the native
     // <details> element which had reproducible races with re-renders
@@ -2524,6 +2537,11 @@ class WoodfireGrillCard extends HTMLElement {
       .btn-start { background: #4caf50; color: white; }
       .btn-stop { background: #e74c3c; color: white; }
       .btn-skip { background: #3498db; color: white; }
+      .actions-secondary { padding-top: 0; }
+      .btn-extend {
+        background: var(--card-background-color); color: var(--primary-text-color);
+        border: 1px solid var(--divider-color);
+      }
     `;
   }
 }

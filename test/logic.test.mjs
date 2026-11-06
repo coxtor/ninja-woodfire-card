@@ -794,6 +794,28 @@ test("an explicit cook-by choice survives a re-render", () => {
   assert.ok(t.$("#ctl-style-temp").classList.contains("active"));
 });
 
+// --- extend-cook buttons: +1 / +5 min, only while a real timer is running ---
+
+test("extend buttons show during a running timer and press the right button", () => {
+  const t = makeCard({
+    ...COUNTDOWN,
+    "button.extend_cook_1min": "unknown",
+    "button.extend_cook_5min": "unknown",
+  });
+  assert.notEqual(t.$("#extend-actions").style.display, "none");
+  t.$("#btn-extend1").fire("click");
+  assert.equal(t.calls[0].domain, "button");
+  assert.equal(t.calls[0].service, "press");
+  assert.equal(t.calls[0].data.entity_id, "button.woodfire_extend_cook_1min");
+  t.$("#btn-extend5").fire("click");
+  assert.equal(t.calls[1].data.entity_id, "button.woodfire_extend_cook_5min");
+});
+
+test("extend buttons are hidden for a probe-driven cook with no timer", () => {
+  const t = makeCard(ACTIVE_COOK);  // no seconds_left/end_time -> remaining is null
+  assert.equal(t.$("#extend-actions").style.display, "none");
+});
+
 test("a probe with no preset selected shows a disabled doneness select", () => {
   const t = makeCard({
     ...ACTIVE_COOK,
