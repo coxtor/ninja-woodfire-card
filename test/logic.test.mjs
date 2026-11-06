@@ -756,6 +756,26 @@ test("the connected icon reflects whether the probe is plugged in", () => {
   assert.ok(!t.$("#ctl-probe2-connected").classList.contains("is-connected"));
 });
 
+test("a probe's enable toggle is locked with a hint while it is not plugged in", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "off",
+  });
+  const sw = t.$("#ctl-probe1en");
+  assert.ok(sw.hasAttribute("disabled"));
+  assert.equal(sw.title, "Probe not plugged in");
+});
+
+test("a plugged-in probe's enable toggle stays usable", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "binary_sensor.probe0_plugged_in": "on",
+  });
+  const sw = t.$("#ctl-probe1en");
+  assert.ok(!sw.hasAttribute("disabled"));
+  assert.equal(sw.title, "");
+});
+
 test("show_probe_presets: false hides the preset selects from the card", () => {
   const t = makeCard(
     {

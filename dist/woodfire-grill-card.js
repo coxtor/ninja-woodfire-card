@@ -1506,7 +1506,7 @@ class WoodfireGrillCard extends HTMLElement {
     this._renderProbePresetSelects(1, "#ctl-probe2food", "#ctl-probe2doneness");
 
     const muted = this._valuesMuted();
-    const setSwitch = (sel, key) => {
+    const setSwitch = (sel, key, { extraDisabled = false, disabledTitle = "" } = {}) => {
       const el = root.querySelector(sel);
       if (!el) return;
       // Mode-aware availability: HA sets these entities to
@@ -1516,7 +1516,11 @@ class WoodfireGrillCard extends HTMLElement {
       // see *why* a control is grayed out.
       const rawState = this._rawState("switch", key);
       const unavailable = rawState === "unavailable" || rawState == null;
-      el.toggleAttribute("disabled", unavailable || muted);
+      el.toggleAttribute("disabled", unavailable || muted || extraDisabled);
+      // extraDisabled (e.g. "no probe plugged in") gets its own reason shown
+      // as a tooltip - unlike plain unavailability, the control works fine
+      // once the actual cause (plug it in) is fixed, not a mode mismatch.
+      el.title = extraDisabled && !unavailable && !muted ? disabledTitle : "";
       // Dim the whole grid row containing this switch.
       const row = el.closest(".row") || el.previousElementSibling;
       if (row) row.classList.toggle("disabled-row", unavailable);
@@ -1536,8 +1540,14 @@ class WoodfireGrillCard extends HTMLElement {
     };
     setSwitch("#ctl-smoke", "cook_smoke");
     setSwitch("#ctl-skip", "cook_skip_preheat");
-    setSwitch("#ctl-probe1en", "probe0_enabled");
-    setSwitch("#ctl-probe2en", "probe1_enabled");
+    setSwitch("#ctl-probe1en", "probe0_enabled", {
+      extraDisabled: !this._bool("binary_sensor", "probe0_plugged_in"),
+      disabledTitle: this._L.probe.disconnected,
+    });
+    setSwitch("#ctl-probe2en", "probe1_enabled", {
+      extraDisabled: !this._bool("binary_sensor", "probe1_plugged_in"),
+      disabledTitle: this._L.probe.disconnected,
+    });
 
     // Probe target-temp inputs: limits and availability come from the number
     // entity, the enabled-state from the effective draft, so activating a
