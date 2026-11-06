@@ -16,12 +16,20 @@ live state, temperatures, probes, and one-tap controls on a single tile.
 ## Features
 
 - Live grill / air / smoke temperature with stale-reading filter
-- Live cook countdown that ticks every second
-- Per-probe display with progress bar towards target temperature
+- Live cook countdown that ticks every second, including the grill's own
+  300-second post-target Rest window for a probe-driven cook
+- Per-probe display with progress bar towards target temperature, hidden
+  once the probe is done instead of showing a stale reading
+- "Cook by: time / temperature" toggle at the top of the settings panel
+  (cosmetic — same commands either way, just which half of the panel shows)
+- Probe food & doneness preset selects (optional, see `show_probe_presets`)
+- Probe temperature alarm — a plain threshold per probe, independent of the
+  probe-target mechanism, always visible so it also works during a timed cook
+- Pellet-refill reminder sliders (interval + count), shown while Smoke is on
 - Mode-aware temperature input (heat-level segments for grill mode,
   Celsius slider for everything else)
 - Cook-mode dropdown, duration slider, smoke / skip-preheat toggles
-- Start / Stop / Skip-Preheat actions
+- Start / Stop / Skip-Preheat actions, `+1 min` / `+5 min` quick extensions
 - Works with both the cloud and the local **Bluetooth** transport; a small
   diagnostics footer shows the active connection, firmware, serial and signal
 - Follows the Home Assistant user's language (English and German; anything
@@ -46,7 +54,10 @@ active connection in its diagnostics footer.
   installed and configured, **version 1.5.0 or newer** — the card applies
   multi-field changes (temperature + duration, probe enable + target, etc.)
   through the integration's `ninja_woodfire.configure_cook` service for a
-  single atomic update instead of several separate calls.
+  single atomic update instead of several separate calls. **Version 1.6.0 or
+  newer** adds the entities the probe alarm, pellet-refill reminder and the
+  Rest-window countdown need — those controls just stay hidden/disabled on
+  an older integration version instead of erroring.
 
 ## Installation
 
