@@ -301,6 +301,30 @@ test("K10 preheat progress shows a bar without a remaining time", () => {
   assert.equal(t.card.shadowRoot.querySelector("#progress-fill").style.width, "40%");
 });
 
+// --- a timerless probe-driven cook shows probe progress, not a hidden bar ---
+
+test("a probe-driven cook with no grill timer shows the probe's own progress", () => {
+  // The integration deliberately leaves the timer unset for this case (see
+  // coordinator.py's _real_duration_seen / timerless_probe_cook) rather than
+  // fake one - remaining stays null here same as plain ACTIVE_COOK.
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.cook_progress": null,
+    "binary_sensor.probe0_active": "on",
+    "sensor.probe0_progress": "35",
+  });
+  const bar = t.card.shadowRoot.querySelector(".progress-bar");
+  assert.notEqual(bar.style.display, "none", "probe progress bar is shown");
+  assert.equal(t.card.shadowRoot.querySelector("#progress-fill").style.width, "35%");
+  assert.equal(t.$("#progress-label").textContent, "Probe 35% to target");
+});
+
+test("a cook with neither a timer nor an active probe hides the progress bar", () => {
+  const t = makeCard({ ...ACTIVE_COOK, "sensor.cook_progress": null });
+  const bar = t.card.shadowRoot.querySelector(".progress-bar");
+  assert.equal(bar.style.display, "none");
+});
+
 // --- K11: explicit device selection -----------------------------------------
 
 test("K11 a BLE grill can be selected by its bluetooth address", () => {

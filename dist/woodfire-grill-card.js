@@ -206,6 +206,7 @@ const TRANSLATIONS = {
     progress: {
       preheat: "Preheating", preheatPct: "Preheating {pct}%",
       remainingOfTotal: "{remaining} left of {total}",
+      probeTargetPct: "Probe {pct}% to target",
     },
     level: { 1: "Lo", 2: "Med", 3: "Hi" },
     toast: { callFailed: "Woodfire: {service} failed ({reason})" },
@@ -315,6 +316,7 @@ const TRANSLATIONS = {
     progress: {
       preheat: "Vorheizen", preheatPct: "Vorheizen {pct}%",
       remainingOfTotal: "{remaining} von {total}",
+      probeTargetPct: "Sonde {pct}% zum Ziel",
     },
     level: { 1: "Niedrig", 2: "Mittel", 3: "Hoch" },
     toast: { callFailed: "Woodfire: {service} fehlgeschlagen ({reason})" },
@@ -1193,7 +1195,17 @@ class WoodfireGrillCard extends HTMLElement {
       // BLE transport reports a preheat percentage but no remaining time).
       const preheatPct = this._num("sensor", "preheat_progress");
       const showPreheatOnly = inPreheat && preheatPct != null;
-      if (!isActive || (remaining == null && !showPreheatOnly)) {
+      // A probe-driven cook with no fixed duration ("until the probe hits
+      // target") never reports a grill countdown at all - the integration
+      // deliberately leaves it unset rather than fake one (see
+      // coordinator.py's _real_duration_seen). Show the probe's own
+      // temperature progress instead of just hiding the bar.
+      const probeProgress = [0, 1]
+        .filter(i => this._bool("binary_sensor", `probe${i}_active`))
+        .map(i => this._num("sensor", `probe${i}_progress`))
+        .filter(pct => pct != null);
+      const showProbeProgress = !inPreheat && remaining == null && probeProgress.length > 0;
+      if (!isActive || (remaining == null && !showPreheatOnly && !showProbeProgress)) {
         bar.style.display = "none";
       } else {
         bar.style.display = "block";
@@ -1208,6 +1220,12 @@ class WoodfireGrillCard extends HTMLElement {
             preheatPct != null
               ? fill(this._L.progress.preheatPct, { pct: Math.round(preheatPct) })
               : this._L.progress.preheat);
+        } else if (showProbeProgress) {
+          bar.classList.remove("preheat-mode");
+          const pct = Math.max(0, Math.min(100, Math.max(...probeProgress)));
+          this._setStyle("progress-fill", "width", `${pct}%`);
+          this._setText("progress-label",
+            fill(this._L.progress.probeTargetPct, { pct: Math.round(pct) }));
         } else {
           bar.classList.remove("preheat-mode");
           let pct = 0;
