@@ -1095,8 +1095,15 @@ class WoodfireGrillCard extends HTMLElement {
     // while cook_state / the progress phase carry the sub-phase that actually
     // halts the timer (lid open, flip food, get food, …).
     const phase = this._attr("sensor", "cook_progress", "phase");
-    const ticking = isActive && ![normState, normaliseState(cookState), normaliseState(phase)]
-      .some(s => PAUSED_STATES.has(s));
+    // "get food" is overloaded: usually a genuine pause (no countdown
+    // running at all, hence PAUSED_STATES freezing the display), but also
+    // the grill-wide label for a probe's 300 s post-target Rest window,
+    // which has a real, live-ticking countdown (the grill's own physical
+    // display shows it moving) - freezing that one would look like a stuck
+    // timer instead of the smooth "Rest" experience the hardware gives.
+    const anyProbeResting = [0, 1].some(i => this._state("sensor", `probe${i}_state`) === "resting");
+    const ticking = isActive && (anyProbeResting || ![normState, normaliseState(cookState), normaliseState(phase)]
+      .some(s => PAUSED_STATES.has(s)));
     const remaining = this._remaining(endTimeSec, endIso, ticking, isActive);
 
     const cookProgressFromSensor = this._num("sensor", "cook_progress");

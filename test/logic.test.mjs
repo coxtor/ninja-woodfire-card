@@ -288,6 +288,30 @@ test("K10 a paused phase does not extrapolate the countdown", () => {
   assert.equal(t.$("#progress-label").textContent, "2:00 left of 30:00");
 });
 
+test("a resting probe's Rest countdown keeps ticking, unlike an ordinary 'get food' pause", () => {
+  // "get food" is overloaded: usually a genuine pause (no real countdown
+  // running), but also the grill-wide label for a probe's 300s post-target
+  // Rest window, which does have a live countdown - freezing that one would
+  // look like a stuck timer instead of the smooth Rest experience the
+  // hardware itself gives.
+  const t = makeCard({
+    ...COUNTDOWN,
+    "sensor.grill_state": "get food",
+    "sensor.cook_state": "get food",
+    "sensor.probe1_state": "resting",
+  });
+  t.clock.advance(3000);
+  t.render();
+  assert.equal(t.$("#progress-label").textContent, "1:57 left of 30:00");
+});
+
+test("an ordinary 'get food' pause with no resting probe still freezes the countdown", () => {
+  const t = makeCard({ ...COUNTDOWN, "sensor.grill_state": "get food", "sensor.cook_state": "get food" });
+  t.clock.advance(3000);
+  t.render();
+  assert.equal(t.$("#progress-label").textContent, "2:00 left of 30:00");
+});
+
 test("K10 preheat progress shows a bar without a remaining time", () => {
   const t = makeCard({
     ...ACTIVE_COOK,
