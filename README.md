@@ -41,10 +41,14 @@ The integration can run fully **local over Bluetooth** (no cloud account, no
 internet) or over the SharkNinja cloud. This card works with both and shows the
 active connection in its diagnostics footer.
 
-> **One Bluetooth connection at a time.** A grill accepts only a single BLE
-> central. While Home Assistant holds the local BLE link, the **official Ninja
-> app cannot connect over Bluetooth at the same time**, and vice versa. Close
-> the app to let Home Assistant connect locally. (This limit is BLE-only; it
+> **The grill accepts only one BLE control connection at a time** — whichever
+> side (Home Assistant or the official Ninja app) is actively sending
+> commands. Live-tested: the Ninja app can stay **open** at the same time
+> without any conflict — it keeps showing live updates the whole time, and
+> Home Assistant's own control connection and commands are unaffected. Only
+> actually issuing a command from both sides at once is untested; in
+> practice there's no need to close the app at all, just don't use both to
+> start/stop/change a cook in the same moment. (This limit is BLE-only; it
 > does not apply to the cloud path.)
 
 ## Requirements
