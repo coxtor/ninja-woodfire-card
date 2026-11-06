@@ -1737,19 +1737,26 @@ class WoodfireGrillCard extends HTMLElement {
     // only, plain entities like the probe alarm - only relevant while Smoke
     // is on, so the row is hidden otherwise rather than offered unusable.
     const smokeOn = this._bool("switch", "cook_smoke");
-    const setPelletNum = (sel, key) => {
+    const setPelletNum = (sel, badgeSel, key, fmt) => {
       const inp = root.querySelector(sel);
       if (!inp) return;
       const numberEntity = this._hassState("number", key);
       const numberUsable = this._entityUsable("number", key);
       this._applyNumberLimits(inp, numberEntity);
       inp.toggleAttribute("disabled", !numberUsable || muted);
-      if (inp.dataset.dirty === "1") return;
+      const badge = root.querySelector(badgeSel);
+      if (inp.dataset.dirty === "1") {
+        if (badge) badge.textContent = fmt(inp.value);
+        return;
+      }
       const live = this._num("number", key);
       if (live != null && inp.value !== String(live)) inp.value = live;
+      if (badge) badge.textContent = fmt(inp.value);
     };
-    setPelletNum("#ctl-pellet-interval", "pellet_reminder_interval");
-    setPelletNum("#ctl-pellet-count", "pellet_reminder_count");
+    setPelletNum("#ctl-pellet-interval", "#ctl-pellet-interval-badge", "pellet_reminder_interval",
+      v => `${v}m`);
+    setPelletNum("#ctl-pellet-count", "#ctl-pellet-count-badge", "pellet_reminder_count",
+      v => v === "0" ? "off" : `${v}x`);
     root.querySelectorAll(".pellet-row").forEach(el => {
       el.style.display = smokeOn ? "" : "none";
     });
@@ -1981,13 +1988,19 @@ class WoodfireGrillCard extends HTMLElement {
               <label id="ctl-smoke-label">${escapeHtml(L.control.smoke)}</label>
               <ha-switch id="ctl-smoke" aria-label="${escapeHtml(L.control.smoke)}"></ha-switch>
 
-              <label id="ctl-pellet-interval-label" class="pellet-row">${escapeHtml(L.control.pelletInterval)}</label>
-              <input id="ctl-pellet-interval" class="pellet-row num" type="number" min="1" max="240" value="45"
-                     aria-label="${escapeHtml(L.control.pelletInterval)}">
+              <label for="ctl-pellet-interval" id="ctl-pellet-interval-label" class="pellet-row">${escapeHtml(L.control.pelletInterval)}</label>
+              <div class="row pellet-row" id="ctl-pellet-interval-row">
+                <input id="ctl-pellet-interval" type="range" min="1" max="240" value="45"
+                       aria-label="${escapeHtml(L.control.pelletInterval)}">
+                <span id="ctl-pellet-interval-badge" class="badge">45m</span>
+              </div>
 
-              <label id="ctl-pellet-count-label" class="pellet-row">${escapeHtml(L.control.pelletCount)}</label>
-              <input id="ctl-pellet-count" class="pellet-row num" type="number" min="0" max="10" value="0"
-                     aria-label="${escapeHtml(L.control.pelletCount)}">
+              <label for="ctl-pellet-count" id="ctl-pellet-count-label" class="pellet-row">${escapeHtml(L.control.pelletCount)}</label>
+              <div class="row pellet-row" id="ctl-pellet-count-row">
+                <input id="ctl-pellet-count" type="range" min="0" max="10" value="0"
+                       aria-label="${escapeHtml(L.control.pelletCount)}">
+                <span id="ctl-pellet-count-badge" class="badge">off</span>
+              </div>
 
               <label id="ctl-skip-label">${escapeHtml(L.control.skipPreheat)}</label>
               <ha-switch id="ctl-skip" aria-label="${escapeHtml(L.control.skipPreheat)}"></ha-switch>
@@ -2133,8 +2146,24 @@ class WoodfireGrillCard extends HTMLElement {
     };
     wireAlarmNum("#ctl-probe1alarmtemp", "probe0_alarm_temp");
     wireAlarmNum("#ctl-probe2alarmtemp", "probe1_alarm_temp");
-    wireAlarmNum("#ctl-pellet-interval", "pellet_reminder_interval");
-    wireAlarmNum("#ctl-pellet-count", "pellet_reminder_count");
+    // Sliders, not number boxes - live badge while dragging, apply on
+    // release, same immediate (non-staged) HA-only path as the alarm.
+    const wirePelletSlider = (sel, badgeSel, key, fmt) => {
+      const el = $(sel);
+      el.addEventListener("input", e => {
+        markDirty(e.target);
+        $(badgeSel).textContent = fmt(e.target.value);
+      });
+      el.addEventListener("change", e => {
+        e.target.blur();
+        this._setAlarmNumber(e.target, key);
+        setTimeout(() => clearDirty(e.target), 2000);
+      });
+    };
+    wirePelletSlider("#ctl-pellet-interval", "#ctl-pellet-interval-badge",
+      "pellet_reminder_interval", v => `${v}m`);
+    wirePelletSlider("#ctl-pellet-count", "#ctl-pellet-count-badge",
+      "pellet_reminder_count", v => v === "0" ? "off" : `${v}x`);
 
     // Food/doneness presets: applied immediately, not staged - see
     // _renderProbePresetSelects for why.

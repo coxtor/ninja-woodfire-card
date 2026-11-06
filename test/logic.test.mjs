@@ -982,7 +982,7 @@ test("extend buttons are hidden for a probe-driven cook with no timer", () => {
 test("the pellet reminder row is hidden when Smoke is off", () => {
   const t = makeCard({ ...ACTIVE_COOK, "switch.cook_smoke": "off" });
   assert.equal(t.$("#ctl-pellet-interval-label").style.display, "none");
-  assert.equal(t.$("#ctl-pellet-interval").style.display, "none");
+  assert.equal(t.$("#ctl-pellet-interval-row").style.display, "none");
 });
 
 test("the pellet reminder row shows once Smoke is on", () => {
@@ -993,7 +993,9 @@ test("the pellet reminder row shows once Smoke is on", () => {
     "number.pellet_reminder_count": { state: "0", attributes: { min: 0, max: 10, step: 1 } },
   });
   assert.notEqual(t.$("#ctl-pellet-interval-label").style.display, "none");
-  assert.notEqual(t.$("#ctl-pellet-interval").style.display, "none");
+  assert.notEqual(t.$("#ctl-pellet-interval-row").style.display, "none");
+  assert.equal(t.$("#ctl-pellet-interval-badge").textContent, "45m");
+  assert.equal(t.$("#ctl-pellet-count-badge").textContent, "off");
 });
 
 test("editing the pellet reminder interval applies immediately, not via configure_cook", () => {
@@ -1010,6 +1012,26 @@ test("editing the pellet reminder interval applies immediately, not via configur
   assert.equal(t.calls[0].service, "set_value");
   assert.equal(t.calls[0].data.entity_id, "number.woodfire_pellet_reminder_interval");
   assert.equal(t.calls[0].data.value, 30);
+});
+
+test("dragging the pellet reminder sliders updates the badge live", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "switch.cook_smoke": "on",
+    "number.pellet_reminder_interval": { state: "45", attributes: { min: 1, max: 240, step: 1 } },
+    "number.pellet_reminder_count": { state: "0", attributes: { min: 0, max: 10, step: 1 } },
+  });
+  const interval = t.$("#ctl-pellet-interval");
+  interval.value = "60";
+  interval.fire("input");
+  assert.equal(t.$("#ctl-pellet-interval-badge").textContent, "60m");
+  // No apply yet - only "change" (release) sends it.
+  assert.equal(t.calls.length, 0);
+
+  const count = t.$("#ctl-pellet-count");
+  count.value = "3";
+  count.fire("input");
+  assert.equal(t.$("#ctl-pellet-count-badge").textContent, "3x");
 });
 
 // --- probe temperature alarm: plain HA entities, independent of the cook draft ---
