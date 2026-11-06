@@ -143,6 +143,7 @@ const TRANSLATIONS = {
       getfood: "Remove food",
       done: "Cooking complete",
       halftime: "Halfway",
+      connectionStale: "Connection unstable — showing the last known reading",
       lid_open: "Lid open",
       error: "Grill error",
     },
@@ -232,6 +233,7 @@ const TRANSLATIONS = {
       getfood: "Essen entnehmen",
       done: "Garvorgang abgeschlossen",
       halftime: "Halbzeit",
+      connectionStale: "Verbindung instabil – zeige letzten bekannten Stand",
       lid_open: "Deckel offen",
       error: "Grill-Fehler",
     },
@@ -397,6 +399,14 @@ const SETPOINT_LEVELS = { lo: 1, med: 2, hi: 3, high: 3 };
 const PREHEAT_LIKE = new Set(["preheat", "preheating", "start", "ignition"]);
 
 const MODE_TRANSITION_TIMEOUT_MS = 5000;
+
+// The integration keeps the cook timer frozen (not fake-decrementing it) once
+// its own beacon has been silent for 60 s (_BEACON_TTL_S in coordinator.py) -
+// deliberately, so a BLE drop never invents a value. This threshold is only
+// for the card's own early heads-up badge, well before that: it tells the
+// user their readings may be a few seconds stale while the real grill keeps
+// going, without the card guessing any further on its own.
+const BEACON_STALE_S = 20;
 
 // Order a draft is sent in: the mode decides the ranges the other values are
 // validated against, and a probe has to be enabled before its target sticks.
@@ -1101,6 +1111,21 @@ class WoodfireGrillCard extends HTMLElement {
         && remaining > 0 && remaining <= totalSeconds / 2 && remaining > totalSeconds / 2 - 60) {
       advisoryText = this._L.advisory.halftime;
     }
+    // Local BLE readings (timer, lid, prompt) all come from the grill's own
+    // advertisement; a stale one means everything below may be a few seconds
+    // behind, not that the cook actually stopped. The integration itself
+    // already freezes rather than invents the timer once its beacon has been
+    // silent for a while (coordinator.py's _BEACON_TTL_S) - this is just the
+    // card telling the user that is happening, not a second guess of its own.
+    const bleConnectedEntity = this._hassState("binary_sensor", "ble_connected");
+    const cloudBackend = this._state("sensor", "cloud_backend");
+    const bleBackend = cloudBackend === "ble"
+      || (cloudBackend == null && bleConnectedEntity != null);
+    const beaconAge = bleConnectedEntity
+      ? Number(bleConnectedEntity.attributes?.beacon_age_seconds) : NaN;
+    const connectionStale = isActive && bleBackend
+      && Number.isFinite(beaconAge) && beaconAge > BEACON_STALE_S;
+    if (!advisoryText && connectionStale) advisoryText = this._L.advisory.connectionStale;
     // An open lid is always worth surfacing (it stalls heating / the cook).
     if (!advisoryText && lidOpen) advisoryText = this._L.advisory.lid_open;
     // Firmware error takes precedence in the advisory banner.

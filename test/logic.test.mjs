@@ -622,6 +622,48 @@ test("N06 the end_time countdown freezes and resumes", () => {
   assert.equal(t.$("#progress-label").textContent, "1:57 left of 30:00", "and ticks on from there");
 });
 
+// --- connection-stale hint: a quiet BLE beacon warns without guessing -------
+
+test("a stale BLE beacon shows a connection hint during an active cook", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.cloud_backend": "ble",
+    "binary_sensor.ble_connected": { state: "on", attributes: { beacon_age_seconds: 45 } },
+  });
+  assert.equal(t.$("#advisory").style.display, "flex");
+  assert.match(t.$("#advisory").textContent, /connection|stale|unstable/i);
+});
+
+test("a fresh BLE beacon shows no connection hint", () => {
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.cloud_backend": "ble",
+    "binary_sensor.ble_connected": { state: "on", attributes: { beacon_age_seconds: 2 } },
+  });
+  assert.equal(t.$("#advisory").style.display, "none");
+});
+
+test("a stale beacon on a cloud backend does not show the BLE hint", () => {
+  // beacon_age_seconds can exist (hybrid setup) while the cloud is still the
+  // one actually feeding this display - the hint would be misleading there.
+  const t = makeCard({
+    ...ACTIVE_COOK,
+    "sensor.cloud_backend": "aws",
+    "binary_sensor.ble_connected": { state: "off", attributes: { beacon_age_seconds: 999 } },
+  });
+  assert.equal(t.$("#advisory").style.display, "none");
+});
+
+test("a stale beacon while idle shows no connection hint", () => {
+  const t = makeCard({
+    "sensor.grill_state": "idle",
+    "sensor.cloud_backend": "ble",
+    "binary_sensor.ble_connected": { state: "on", attributes: { beacon_age_seconds: 999 } },
+  });
+  assert.equal(t.$("#advisory").style.display, "none");
+});
+
+
 // --- R1: the seconds_left fallback holds its value across a pause ------------
 
 test("R1 the seconds_left countdown holds on pause and resumes from the held value", () => {
